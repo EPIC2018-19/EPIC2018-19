@@ -1,0 +1,733 @@
+<?xml version="1.0"?>
+<!-- ======================================================================= -->
+<!--                      DO NOT MODIFY THIS FILE!                           -->
+<!-- The name of the project and its version number are defined in the       -->
+<!-- build.properties file as "project.name" and "project.version"           -->
+<!-- Override required tasks in build.xml, and import this build file.       -->
+<!-- ======================================================================= -->
+<project default="comp" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+
+<!-- ======================================================================= 
+ THE DIRECTORY LAYOUT OF THE PROJECT                                     
+ _______________________________________________________________________ 
+                                                                         
+   PROJECT-ROOT                                                          
+      |  build.xml                                                       
+      |                                                                  
+      +- lib                   // the JAR files needed for the project   
+      |                                                                  
+      +- src                   // source code                            
+      |  +- com                                                          
+      |     +- eMeter                                                    
+      |        +- mypackage    // the JAVA soruce code                   
+      |           +- resources // properties, config and data files      
+      |                                                                  
+      +- test                  // test source code                       
+      |  +- com                                                          
+      |     +- eMeter                                                    
+      |        +- mypackage    // the JAVA soruce code                   
+      |           +- resources // properties, config and data files      
+      |                                                                  
+      +- docs                  // place for documentation files & specs  
+      |                                                                  
+   - -|- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
+      |             Produced by build, not deleted by clean:             
+      |             ========================================             
+      +- logs                  // the place for log files                
+      |                                                                  
+   - -|- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
+      |               Produced by build, deleted by clean:               
+      |               ====================================               
+      +- javadoc ...           // javadoc-produced documentation         
+      |                                                                  
+      +- dist                                                            
+      |  +- jar                // the produced JAR files                 
+      |     +- META-INF        // the produced manifest files.           
+      |                                                                  
+      +- build                                                           
+         |                                                               
+         +- classes               // the target build directory          
+         |  +- com                                                       
+         |     +- eMeter                                                 
+         |        +- mypackage    // the JAVA compiled classes           
+         |           +- resources // properties, config and data files   
+         |                                                               
+         +- test                  // the compiled JUNIT test tree        
+            |                                                            
+            +- classes            // produced test classes               
+            |  +- com             // produced test cases                 
+            |     +- eMeter                                              
+            |        +- mypackage // the JAVA compiled classes           
+            |           +- resources // properties, config, data files   
+            |                                                            
+            +- data               // test related data                   
+            |                                                            
+            +- reports            // the poroduced test report           
+               +- com                                                    
+                  +- eMeter                                              
+                     +- mypackage    // the test reports for package     
+                                                                         
+                                                                         
+                                                                         
+ ======================================================================= -->
+
+   <!-- Tell ant to use my environment variables - - - - - - - - - - - - - - -->
+   <property environment="env"/>
+
+   <!-- taskdefs -->
+   <property name="clover.jar" location="${env.ANT_HOME}/lib/clover.jar"/>
+   <taskdef resource="cloverlib.xml" classpath="${clover.jar}"/>
+   <property name="antcontrib.jar" location="${env.ANT_HOME}/lib/ant-contrib.jar"/>
+   <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${antcontrib.jar}"/>
+
+   <!-- PROPERTIES - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+   <!-- The user.properties file is not checked in and contains data of      -->
+   <!-- local importance (e.g. a different value of the lib.dir path)        -->
+   <property file="${basedir}/user.properties"/>
+
+   <!-- The build.properties file is checked in and contains data of         -->
+   <!-- significance for the build                                           -->
+   <property file="${basedir}/build.properties"/>
+
+   <!-- Retrieve version.properties if not in workspace                      -->
+   <property name="ver.prop.file"     value="${import.dir}/version.properties"/>
+   <property name="p4.config.path"    value="EnergyIP/core/trunk/config"/>
+
+   <get src="${p4.web.url}/${p4.config.path}/build.properties"
+	dest="${ver.prop.file}" skipexisting="true"/>
+
+   <property file="${ver.prop.file}"/>
+
+
+   <property name="build.debug"             value="on"/>
+   <property name="build.compiler"          value="modern"/>
+
+   <!-- These build properties may be passed in from master build. If not,   -->
+   <!-- they will have the values listed below:                              -->
+   <property name="system.version"          value="undefined" />
+   <property name="build.number"            value="undefined" />
+   <property name="build.user.name"         value="${user.name}" />
+   <property name="env.COMPUTERNAME"        value="${env.HOSTNAME}"/>
+   <property name="build.host"              value="${env.COMPUTERNAME}" />
+   <property name="build.os.name"           value="${os.name}" />
+
+   <!-- Build properties that define file names required by every project    -->
+   <property name="build.dir"            location="${basedir}/build" />
+   <property name="build.classes.dir"    location="${build.dir}/classes" />
+   <property name="build.test.dir"       location="${build.dir}/test" />
+   <property name="build.test.classes.dir" location="${build.test.dir}/classes" />
+   <property name="build.test.data.dir" location="${build.test.dir}/data" />
+   <property name="build.test.reports.dir" location="${build.test.dir}/reports" />
+   <property name="build.test.last.failed.file" location="${build.test.dir}/.lasttestfailed" />
+   <property name="src.dir"      location="${basedir}/src"/>
+   <property name="testsrc.dir"  location="${basedir}/test"/>
+   <property name="doc.dir"      location="${basedir}/javadoc"/>
+   <property name="dist.dir"     location="${basedir}/dist"/>
+   <property name="jar.dir"      location="${basedir}/dist/jar"/>
+   <property name="manif.dir"    location="${basedir}/dist/jar/META-INF"/>
+   <property name="tld.dir"      location="${basedir}/tlds"/>
+   <property name="lib.dir"      location="${basedir}/lib"/>
+   <property name="log.dir"      location="${basedir}/logs"/>
+   <property name="schema.dist.dir" location="${basedir}/schema-dist" />
+
+   <property name="schema.src.dir" location="${build.dir}/schema" />
+   <property name="jar.file"        value="${project.name}"/>
+   <property name="jar.file.name"   value="${jar.file}.jar"/>
+   <property name="manif.file.name" value="MANIFEST.MF"/>
+   <property name="junit.jar"       value="${env.JUNIT_HOME}/junit.jar" />
+   <property name="appProperties.dir"      location="${basedir}/conf/appProperties"/>
+   <property name="resources.dir"      location="${basedir}/resources"/>
+
+   <property name="coverage.report.dir"      location="${basedir}/coverage_report"/>
+   <property name="coverage.excludes.file"  value="${basedir}/coverage_excludes.xml" />
+   <property name="coverage.db.file"  value="${basedir}/.clover/clover.db" />
+   <property name="with.coverage" value="false" />
+   <property name="coverage.use.shared.db" value="false" />
+   <property name="coverage.flush.policy" value="threaded"/>
+   <property name="coverage.flush.interval" value="60000"/>
+
+   <property name="ivy.settings.file"  value="${user.home}/.ivy2/ivysettings.xml" />
+   <property name="ivy.retrieve.pattern" value="${lib.dir}/[artifact].[ext]" />
+   <property name="ivy.default.resolver" value="emeter-chain" />
+   <property name="ivy.log.setting" value="quiet" />
+   <property name="ivy.pub.artifact.pattern" value="${jar.dir}/[artifact].[ext]" />
+   <property name="ivy.pub.resolver" value="local" />
+   <property name="ivy.pub.revision" value="${system.artifact.version}" />
+   <property name="ivy.pub.status" value="integration" />
+   <property name="ivy.pub.forcedeliver" value="true" />
+   <property name="ivy.pub.overwrite" value="true" />
+
+   <if>
+     <equals arg1="${with.coverage}" arg2="true" />
+     <then>
+       <property name="run.coverage" value="true" />
+     </then>
+   </if>
+   <if>
+     <equals arg1="${coverage.use.shared.db}" arg2="true" />
+     <then>
+       <property name="run.coverage.shared" value="true" />
+     </then>
+   </if>
+
+	<!-- CLASSPATHS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<path id="compile.classpath">
+		<!-- include this project's generated classes -->
+		<pathelement path="${build.classes.dir}" />
+		<fileset dir="${lib.dir}" />
+		<fileset dir="resources">
+		    <patternset id="classpath.excludes">
+			<exclude name="**/MANIFEST.MF"/>
+			<exclude name="**/*.sh"/>
+			<exclude name="**/*placeholder"/>
+			<exclude name="**/*.xls"/>
+			<exclude name="**/*.xsl"/>
+			<exclude name="**/*.yml"/>
+			<exclude name="**/*.txt"/>
+			<exclude name="**/*.css"/>
+			<exclude name="**/*.original"/>
+			<exclude name="**/*.xml"/>
+			<exclude name="**/*.bpmn"/>
+			<exclude name="**/*.bpmn2"/>
+			<exclude name="**/*.wid"/>
+			<exclude name="**/*.conf"/>
+			<exclude name="**/*.rptdesign"/>
+			<exclude name="**/*.properties"/>
+			<exclude name="**/*.xsd"/>
+			<exclude name="**/*.wsdl"/>
+			<exclude name="**/*.classpath"/>
+			<exclude name="**/*.png"/>
+			<exclude name="**/*.js"/>
+			<exclude name="**/*.rptlibrary"/>
+			<exclude name="**/*.gif"/>
+			<exclude name="**/*.sql"/>
+			<exclude name="**/*.jpg"/>
+                        <exclude name="**/*.sha1"/>
+                        <exclude name="**/*.md5"/>
+                        <exclude name="**/*.json"/>
+                        <exclude name="**/*.1st"/>
+                        <exclude name="**/*.lst"/>
+		    </patternset>
+		</fileset>
+		<fileset dir="${dist.dir}">
+		    <patternset refid="classpath.excludes"/>
+		</fileset>
+	</path>
+
+   <path id="test.classpath">
+      <path refid="compile.classpath" />
+      <pathelement path="${build.test.classes.dir}" />
+      <pathelement path="${junit.jar}"/>
+   </path>
+
+	<patternset id="war.jar.files">
+	    <include name="**/*.jar"/>
+	 </patternset>
+   <!-- TARGETS and their dependencies - - - - - - - - - - - - - - - - - - - -->
+   <!-- IVY Targets -->
+	<target name="clean-cache">
+		<ivy:cleancache />
+	</target>
+	<target name="publish" depends="dist, generate-version-files">
+		<ivy:publish
+		    artifactspattern="${ivy.pub.artifact.pattern}"
+		    resolver="${ivy.pub.resolver}"
+		    pubrevision="${ivy.pub.revision}"
+		    status="${ivy.pub.status}"
+		    forcedeliver="${ivy.pub.forcedeliver}"
+		    overwrite="${ivy.pub.overwrite}" />
+	</target>
+	<target name="resolve">
+	  <ivy:settings id="ivy.emeter.instance" file="${ivy.settings.file}"/>
+	  <ivy:resolve log="${ivy.log.setting}" />
+	  <ivy:retrieve pattern="${ivy.retrieve.pattern}" log="${ivy.log.setting}" />
+	</target>
+	
+	<!-- XSD Compile -->
+	<path id="xmlbean.classpath">
+				<fileset dir="${lib.dir}" includes="xbean*.jar"/>
+				<fileset dir="build" />
+	</path>
+
+	<target name="XsdToJava" depends="init,resolve" description="Xsd Java classes generation">
+		<taskdef name="xmlbean" classname="org.apache.xmlbeans.impl.tool.XMLBean" classpathref="xmlbean.classpath" />
+		<xmlbean srcgendir="${schema.dist.dir}" classgendir="${schema.dist.dir}/build" classpathref="xmlbean.classpath" failonerror="false" srconly="true">
+			<fileset dir="${resources.dir}" includes="**/*.xsd **/*.xsdconfig" />
+		</xmlbean>
+	</target>
+
+	<target name="distXSD" depends="XsdToJava" description="Xsd Java JAR generation">
+				<javac srcdir="${schema.dist.dir}" destdir="${schema.dist.dir}/build" classpathref="xmlbean.classpath" />
+				<jar destfile="${jar.dir}/${schema.dist.jar.name}">
+					<fileset dir="${schema.dist.dir}/build"/>
+				</jar>
+	</target>
+	
+   <!-- Display targets and dependencies: show, info, help, usage, targets - -->
+   <target name="show">
+      <echo message="-- THE TARGETS OF THIS PROJECT --"/>
+      <echo message=""/>
+      <echo message="- clean             [deletes all previous build files]"/>
+      <echo message="- init              [creates the idrectory structure]"/>
+      <echo message="- doc --- init      [creates the documentation]"/>
+      <echo message="- docpriv --- init  [creates the private documentation]"/>
+      <echo message="- comp --- init     [compiles the source code - DEFAULT]"/>
+      <echo message="- testcomp --- comp [compiles the test code]"/>
+      <echo message="- test --- testcomp [runs all test cases]"/>
+      <echo message=""/>
+      <echo message="- manif --- comp    [creates the manifest file]"/>
+      <echo message="- dist --- manif    [compiles and packages the jar file]"/>
+      <echo message=""/>
+      <echo message="- all --- clean - test - doc - dist "/>
+      <echo message=""/>
+      <echo message="- show              [shows this list of dependencies]"/>
+      <echo message="- info --- show     [same as show]"/>
+      <echo message="- help --- show     [same as show]"/>
+      <echo message="- usage --- show    [same as show]"/>
+      <echo message="- targets --- show  [same as show]"/>
+      <echo message=""/>
+   </target>
+   <target name="info"    depends="show" />
+   <target name="help"    depends="show" />
+   <target name="usage"   depends="show" />
+   <target name="targets" depends="show" />
+
+
+   <!-- Cleaning up all the build-generated files and directories - - - - -  -->
+   <target name="clean">
+      <delete dir="${build.dir}" includeEmptyDirs="true" />
+      <delete dir="${doc.dir}"   includeEmptyDirs="true" />
+      <delete dir="${dist.dir}"  includeEmptyDirs="true" />
+   </target>
+
+
+   <!-- Intialization of the neccessary directories - - - - - - - - - - - -  -->
+   <target name="init" depends="coverage.init">
+      <!-- Fail if mandatory parameters not defined -->
+      <fail message="Missing or empty project.name in build.properties"
+            unless= "project.name.defined" />
+      <fail message="Missing or empty project.version in build.properties"
+            unless= "project.version.defined" />
+      <!-- Set build timestamp (to be written to jar manifest) -->
+      <tstamp>
+         <format property="build.timestamp" pattern="yyyy-MM-dd HH:mm z"/>
+      </tstamp>
+
+      <!-- initialize build related directories -->
+      <mkdir dir="${build.dir}"/>
+      <mkdir dir="${resources.dir}"/>
+      <mkdir dir="${build.classes.dir}"/>
+      <mkdir dir="${doc.dir}"/>
+      <mkdir dir="${dist.dir}"/>
+      <mkdir dir="${jar.dir}"/>
+      <mkdir dir="${manif.dir}"/>
+      <mkdir dir="${log.dir}"/>
+      <mkdir dir="${schema.dist.dir}/build"/>
+
+      <!-- initialize test related directories -->
+      <mkdir dir="${build.test.dir}"/>
+      <mkdir dir="${build.test.classes.dir}"/>
+      <mkdir dir="${build.test.data.dir}"/>
+      <mkdir dir="${build.test.reports.dir}"/>
+   </target>
+
+
+   <!-- Compiling the Source Files - - - - - - - - - - - - - - - - - - - - - -->
+   <target name="comp" depends="init, resolve">
+
+      <javac srcdir="${src.dir}"
+             destdir="${build.classes.dir}"
+             debug="${build.debug}"
+             deprecation="on">
+         <include name="**/*.java"/>
+         <classpath refid="compile.classpath"/>
+      </javac>
+      <!-- copy all the data files to the build classpath as well -->
+      <copy todir="${build.classes.dir}">
+         <fileset dir     ="${src.dir}"
+                  includes="**/*.properties,**/*.dtd,**/*.xml,**/*.xsd" />
+      </copy>
+
+   </target>
+	
+   <!-- Compiling the Test Cases - - - - - - - - - - - - - - - - - - - - - - -->
+   <target name="testcomp" depends="comp">
+      <javac srcdir="${testsrc.dir}"
+             destdir="${build.test.classes.dir}"
+             debug="${build.debug}"
+             includeAntRuntime="yes">
+         <include name="**/*.java"/>
+         <classpath refid="test.classpath"/>
+      </javac>
+      <!-- copy resources over to the test classpath -->
+      <copy todir="${build.test.classes.dir}">
+         <fileset dir     ="${testsrc.dir}"
+                  includes="**/*.properties,**/*.dtd,**/*.xml,**/*.xsd" />
+      </copy>
+   </target>
+
+
+   <!-- Parameter settings -->
+   <condition property="project.name.defined">
+      <and>
+         <isset property="project.name" />
+         <not>
+            <equals arg1="${project.name}" arg2="" trim="true" />
+         </not>
+      </and>
+   </condition>
+
+   <condition property="project.version.defined">
+      <and>
+         <isset property="project.version" />
+         <not>
+            <equals arg1="${project.version}" arg2="" trim="true" />
+         </not>
+      </and>
+   </condition>
+
+   <!-- Unit testing block * - * - * - * - * - * - * - * - * - * - * - * - * -->
+   <!-- ==================                                                   -->
+   <!-- Finds out which tests need to be run and runs them, formats their    -->
+   <!-- output, and creates test reports but only if the tests are too old.  -->
+
+   <!-- First test if it is neccessary at all to do the testing.             -->
+   <!-- This condition establishes whether the tests are up-to-date or not   -->
+   <condition property="tests.uptodate">
+      <or>
+         <!-- if testsrc doesn't exist, we don't do test by faking uptodate  -->
+         <not>                <!-- see if there is a test tree to begin with -->
+            <available file="${testsrc.dir}" type="dir" />
+         </not>
+         <and>
+            <uptodate>        <!-- see if source java files are up to date   -->
+               <srcfiles dir="${src.dir}" includes="**/*.java"/>
+               <mapper type="glob" from="*.java"
+                                   to="${build.classes.dir}/*.class"/>
+            </uptodate>
+            <uptodate>        <!-- see if data in source tree is up to date  -->
+               <srcfiles dir="${src.dir}" excludes="**/*.java"/>
+               <mapper type="glob" from="*"
+                                   to="${build.classes.dir}/*"/>
+            </uptodate>
+
+            <uptodate>        <!-- see if test source code is up to date     -->
+               <srcfiles dir="${testsrc.dir}" includes="**/*.java"/>
+               <mapper type="glob" from="*.java"
+                                   to="${build.test.classes.dir}/*.class"/>
+            </uptodate>
+            <uptodate>        <!-- see if data in test tree is up to date    -->
+               <srcfiles dir="${testsrc.dir}" excludes="**/*.java"/>
+               <mapper type="glob" from="*"
+                                   to="${build.test.classes.dir}/*"/>
+            </uptodate>
+
+            <not>             <!-- see if the last build did not fail        -->
+               <available file="${build.test.last.failed.file}"/>
+            </not>
+            <not>             <!-- if specific test requested, = out of date -->
+               <isset property="testcase"/>
+            </not>
+
+            <uptodate>        <!-- see if the test results are current       -->
+               <srcfiles dir="${testsrc.dir}" includes="**/*.java"/>
+               <mapper type="package"
+                       from="*Test.java"
+                       to="${build.test.data.dir}/Test-*Test.xml"/>
+            </uptodate>
+         </and>
+      </or>
+   </condition>
+
+
+   <!-- Run the actual test target  - - - - - - - - - - - - - - - - - - - -  -->
+   <target name="test" depends="testcomp" unless="tests.uptodate">
+      <!-- copy all the data files from the build classpath to project root  -->
+      <!-- so that the junit test programs can find them when they run       -->
+      <!--copy todir="${basedir}" flatten="true">
+         <fileset dir     ="${build.test.classes.dir}"
+                  includes="**/*.properties,**/*.dtd,**/*.xml,**/*.xsd" />
+      </copy-->
+
+      <junit printsummary="on"
+             showoutput="true"
+             errorProperty="test.failed"
+             failureProperty="test.failed"
+             fork="yes"
+	     forkmode="perBatch"
+	     dir="${basedir}">
+         <classpath>
+	     <pathelement location="${clover.jar}" />
+	     <path refid="test.classpath" />
+         </classpath>
+
+         <!-- pass arguments to the XML formatter -->
+         <sysproperty key="docs.dir"   value="${build.test.classes.dir}"/>
+         <sysproperty key="index.dir"  value="${build.test.dir}"/>
+
+         <formatter type="xml"/>                    <!-- create output files -->
+         <formatter type="brief" usefile="false"/>  <!-- send to the console -->
+
+         <!-- if an individual test is requested -->
+         <test name="${testcase}" if="testcase"/>
+
+         <!-- if all tests are to be run -->
+         <batchtest todir="${build.test.data.dir}" unless="testcase">
+            <fileset dir="${build.test.classes.dir}"
+                     includes="**/*Test.class, **/Test*.class"
+		     excludes="**/*$*.class"/>
+         </batchtest>
+      </junit>
+
+
+      <!-- Turning the test output into test reports - - - - - - - - - - - - -->
+      <junitreport todir="${build.test.data.dir}">
+         <fileset dir="${build.test.data.dir}">
+            <include name="TEST-*.xml"/>        <!-- Default test file names -->
+         </fileset>
+         <report format="frames"
+                 todir="${build.test.reports.dir}"/>
+      </junitreport>
+
+
+      <!-- Create TEMP file if last build failed - - - - - - - - - - - - - - -->
+      <echo message="last build failed tests"
+            file   ="${build.test.last.failed.file}"/>
+      <!-- If some test failed, exists the build file throwing an exception  -->
+      <fail if="test.failed">
+         !==== Unit Test Failed! ====!
+      </fail>
+      <!-- Since last build succeeded, delete TEMP file - - - - - - - - - -  -->
+      <delete file="${build.test.last.failed.file}"/>
+   </target>
+
+   <target name="coverage.init" if="run.coverage" unless="coverage.init.done">
+       <available file="${coverage.excludes.file}" property="coverage.excludes.exists" />
+       <echo message="Using initstring: ${coverage.db.file}" />
+       <echo message="Using flushpolicy: ${coverage.flush.policy}" />
+       <echo message="Using flushinterval: ${coverage.flush.interval}" />
+       <echo message="In basedir: ${basedir}" />
+       <mkdir dir="${coverage.report.dir}/history"/>
+       <clover-setup initstring="${coverage.db.file}"
+		     flushpolicy="${coverage.flush.policy}"
+		     flushinterval="${coverage.flush.interval}"
+                     instrumentLambda="block">
+           <statementContext name="iflog" regexp="if.?.?log.*\.isDebugEnabled.*}"/>
+		   <statementContext name="iflogger" regexp="if.?.?logger.*\.isDebugEnabled.*}"/>
+       	   <statementContext name="IFLOGGER" regexp="if.?.?LOGGER.*\.isDebugEnabled.*}"/>
+	       <statementcontext name="LOGGER" regexp="^logger\..*"/>
+	       <statementcontext name="CAPLOGGER" regexp="^LOGGER\..*"/>
+           <methodContext name="simpleSmallMethods" regexp=".*" maxComplexity="1" maxStatements="3"/>
+           <methodContext name="toString" regexp="(.* )?public .*toString\(\).*"/>
+           <files>
+               <excludesfile name="${coverage.excludes.file}" if="coverage.excludes.exists"/>
+           </files>
+       </clover-setup>
+       <property name="coverage.init.done" value="true" />
+   </target>
+
+   <target name="coverage.clean" if="run.coverage">
+       <clover-clean />
+       <delete dir="${coverage.report.dir}" />
+   </target>
+
+   <target name="coverage.report" depends="coverage.init" unless="run.coverage.shared">
+       <clover-report>
+           <historical outfile="${coverage.report.dir}/history" historyDir="${coverage.report.dir}"/>
+           <current outfile="${coverage.report.dir}" title="${project.name} Coverage">
+               <format type="html" filter="iflog,IFLOGGER,iflogger,LOGGER,CAPLOGGER,property,toString"/>
+			   <columns>
+                    <totalPercentageCovered format="%" />
+                    <totalStatements format="raw" />
+                    <coveredStatements format="%" />
+                    <totalBranches format="raw" />
+                    <coveredBranches format="%" />
+               </columns>
+           </current>
+       </clover-report>
+       <echo message="${build.number}" file="${coverage.report.dir}/build_number" />
+   </target>
+
+   <!-- End of Unit Test block * - * - * - * - * - * - * - * - * - * - * - * -->
+
+
+   <!-- Creates the documentation files - - - - - - - - - - - - - - - - - -  -->
+   <target name="doc" depends="init">
+      <javadoc sourcepath="${src.dir}"
+               destdir="${doc.dir}"
+               windowtitle="JavaDoc for ${project.name}"
+               doctitle="JavaDoc for ${project.name}"
+               >
+         <fileset dir="."
+                  includes="**/src/**/*.java" excludes="**/test/src/**/*.java"/>
+      </javadoc>
+   </target>
+
+
+   <!-- Creates the documentation files - - - - - - - - - - - - - - - - - -  -->
+   <target name="docpriv" depends="init">
+      <javadoc sourcepath="${src.dir}"
+               destdir="${doc.dir}"
+               private="true">
+         <fileset dir="${src.dir}/"
+                  includes="**/*.java"/>
+      </javadoc>
+   </target>
+
+
+  <!-- Creates the distribution JAR files - - - - - - - - - - - - - - - - -  -->
+  <target name="manif" depends="comp" >
+      <manifest file="${manif.dir}/${manif.file.name}">
+         <attribute name="Implementation-Title" value="${project.name}"/>
+         <attribute name="Implementation-Vendor" value="eMeter Corporation"/>
+         <attribute name="Implementation-Vendor-Id" value="com.emeter"/>
+         <attribute name="Implementation-Version" value="${project.version}"/>
+         <attribute name="System-Version" value="${system.version}"/>
+         <attribute name="Build-Id" value="${build.number}"/>
+         <attribute name="Build-Time" value="${build.timestamp}"/>
+         <attribute name="Built-By" value="${build.user.name}"/>
+         <attribute name="Built-On" value="${build.host}"/>
+         <attribute name="Build-Os" value="${build.os.name}"/>
+      </manifest>
+   </target>
+
+  <!-- Creates the distribution JAR files - - - - - - - - - - - - - - - - -  -->
+   <target name="dist" depends="distjar"/>
+	
+	<target name = "distwar" depends ="distjar">
+		<war destfile="${jar.dir}/${project.name}.war" webxml="Web/WEB-INF/web.xml" compress="true">
+         			 <fileset dir="${build.dir}" /> 
+					<fileset dir="Web/resources/" />
+					<webinf dir="Web/WEB-INF" includes="*.xml, *.jsp"/>
+					<lib dir="${lib.dir}">
+						<patternset refid ="war.jar.files" />
+					</lib>
+					<lib dir="${jar.dir}" includes="${jar.file.name}"/>
+		</war>
+	</target>
+	<target name = "distjar" depends = "manif">
+	   	  <jar destfile="${jar.dir}/${jar.file.name}" index="true"
+	           manifest="${manif.dir}/${manif.file.name}">
+	         <fileset dir="${build.classes.dir}" />
+			<fileset dir="${schema.dist.dir}/build" />
+	      </jar>
+	 </target>
+		
+	<target name="generate-version-files" unless="have.version.files">
+		<!-- Get the top level project. For now its eip-apps / opt8
+             Based on top level project, the path of version files are set -->
+		<propertyregex property="top.level.project"
+			input="${user.dir}"
+			regexp="(EnergyIP)/(.*?)/"
+			select="\2"
+			casesensitive="false" />
+
+		<echo message="${top.level.project}" />
+
+		<if>
+			<equals arg1="${top.level.project}" arg2="eip-apps" />
+			<then>
+				<property name="version.file"      location="${build.dir}/version.txt"/>
+				<property name="version.json.file" location="${build.dir}/version.json" />
+			</then>
+		</if>
+
+		<if>
+			<equals arg1="${top.level.project}" arg2="apps" />
+			<then>
+				<property name="version.file"      location="${build.dir}/version.txt"/>
+				<property name="version.json.file" location="${build.dir}/version.json" />
+			</then>
+		</if>
+
+		<if>
+			<equals arg1="${top.level.project}" arg2="opt8" />
+			<then>
+				<property name="version.file"      location="${dist.dir}/publish/opt/${project.name}/version.txt"/>
+				<property name="version.json.file" location="${dist.dir}/publish/opt/${project.name}/version.json" />
+			</then>
+		</if>
+
+
+		<!-- This echo can be deleted after code review -->
+		<echo message="project.version=${project.version}" />
+
+		<!-- Splitting the major/minor/service from project.version
+             project.version is taken from build.properties
+             \1 \2 \3 are the groups after split
+             In \3, if project.version contains blank or 0, the app.version.property set to blank -->
+		<propertyregex property="app.version.major"
+			input="${project.version}" regexp="([0-9])\.([0-9])" select="\1" />
+
+		<propertyregex property="app.version.minor"
+			input="${project.version}" regexp="([0-9])\.([0-9])" select="\2" />
+
+		<propertyregex property="app.version.service"
+			input="${project.version}" regexp="([0-9])\.([0-9])\.([1-9])" select="\3" defaultValue="" />
+
+		<!-- Set the app.version based on the app.version.service. -->
+		<if>
+			<equals arg1="${app.version.service}" arg2="" />
+			<then>
+				<property name="app.version" value="${app.version.major}.${app.version.minor}" />
+			</then>
+			<else>
+				<property name="app.version" value="${app.version.major}.${app.version.minor}.${app.version.service}" />
+			</else>
+		</if>
+
+		<!-- Below echos can be deleted after code review -->
+		<echo message="app.major   =${app.version.major}" />
+		<echo message="app.minor   =${app.version.minor}" />
+		<echo message="app.services=${app.version.service}" />
+		<echo message="app.version =${app.version}" />
+
+		<!-- set the build timestamp to the current time -->
+		<tstamp>
+			<format property="build.timestamp" pattern="yyyy-MM-dd HH:mm:ss"/>
+		</tstamp>
+
+                <!-- write the version.json file, unless we are in a multi-module build -->
+                <if>
+                  <isset property="version.json.file"/>
+                  <then>
+                    <echo message="generating version.json"/>
+                    <echo file="${version.json.file}">{
+    "product_name": "${project.name}",
+    "product_version": "${app.version}",
+    "version_major": "${app.version.major}",
+    "version_minor": "${app.version.minor}",
+    "version_service_pack": "${app.version.service}",
+    "version_patch": "0",
+    "build_number": "${build.number}",
+    "build_tstamp": "${build.timestamp}",
+    "version_txt_string": "${project.name}-${app.version}-${build.number}",
+    "energyip_version": "${system.version}"
+}${line.separator}</echo>
+                  </then>
+                  <else>
+                    <echo message="skipped writing version.json file. this is valid if we are in a sub-module"/>
+                  </else>
+                </if>
+
+                <!-- write the version.txt file, unless we are in a multi-module build (deprecated) -->
+                <if>
+                  <isset property="version.file"/>
+                  <then>
+                    <echo message="generating version.txt"/>
+                    <echo message="${project.name}-${app.version}-${build.number}${line.separator}"
+                          file="${version.file}" />
+                  </then>
+                  <else>
+                    <echo message="skipped writing version.txt file. this is valid if we are in a sub-module"/>
+                  </else>
+                </if>
+
+		<property name="have.version.files" value="true"/>
+	</target>
+
+   <!-- Perform build for all the targets in sequence - - - - - - - - - - -  -->
+   <target name="all" depends="clean, test, doc, dist"/>
+
+</project>

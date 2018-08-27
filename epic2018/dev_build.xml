@@ -1,0 +1,354 @@
+<?xml version="1.0"?>
+<!-- ======================================================================= -->
+<!--                      DO NOT MODIFY THIS FILE!                           -->
+<!-- The name of the project and its version number are defined in the       -->
+<!-- build.properties file as "project.name" and "project.version"           -->
+<!-- ======================================================================= -->
+<project default="comp" basedir="."  name="em-adm" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property environment="env"/>
+	<property file="${basedir}/user.properties"/>
+	<property file="${basedir}/build.properties"/>
+
+	<get src="${p4.web.url}/${p4.platform.path}/common.build.xml"
+	         dest="${common.build.file}" skipexisting="true"/>
+
+	<import file="${common.build.file}"/>
+
+	<property name = "schema.dist.jar.name" value = "${project.name}XSD.jar"/>
+	<property name="war.file.name" value="em-adm.war" />
+	
+	<property name="codegen.generate.xmlDataBinding" value="xmlbeans"/>
+	<property name="codegen.generate.java2XmlDefinition" value="true" />
+	<property name="codegen.generate.xmlDefinition2Java" value="true" />
+	<property name="codegen.generate.serversidecode" value="true" />
+	<property name="codegen.generate.serversideconfig" value="true" />
+	<property name="codegen.generate.clientsidecode" value="true" />
+	<property name="codegen.generate.clientsideconfig" value="true" />
+	<property name="codegen.includeSecurityAnnotation" value="true" />
+	<property name="codegen.generateExt" value="true" />
+	<property name="codegen.generate.webservicecode" value="true" />
+	<property name="codegen.generate.generatewsdl" value="true" />
+	<property name="codegen.generate.generateFileHander" value="true" />
+	<property name="codegen.generate.generateJMSHander" value="true" />
+	<property name="codegen.generate.generateendpoints" value="true"/>
+	<property name="codegen.incomingdir" location="${basedir}/resources/registry/metadata" />
+	<property name="codegen.outputdir" location="${build.dir}/generated-src" />
+	<property name="codegen.wsClientOutputDir" location="${build.dir}/generated-src" />
+	<property name="codegen.classes.dir" location="${build.dir}/classes" />
+	<property name="codegen.templates" location="${lib.dir}/a2f.jar" />
+	<property name="codegen.logfile" location="${basedir}/logs/velocity.log" />
+	
+	<property name="demo.dir" location="${basedir}/demo" />
+	
+	<path id="compile.classpath">
+		<!-- include this project's generated classes -->
+		<pathelement path="${build.classes.dir}"/>
+		<fileset dir="${lib.dir}">
+			<!-- exclude jar built by this project -->
+			<exclude name="${jar.file}"/>
+		</fileset>
+	</path>
+	
+	<!-- Cleaning up all the build-generated files and directories - - - - -  -->
+	<target name="clean">
+		<delete dir="${build.dir}" includeEmptyDirs="true" />
+		<delete dir="${doc.dir}" includeEmptyDirs="true" />
+		<delete dir="${manif.dir}" />
+	</target>
+	
+	<path id="test.classpath">
+		<path refid="compile.classpath" />
+		<pathelement path="${build.test.classes.dir}" />
+	</path>
+	
+	<!-- Intialization of the neccessary directories - - - - - - - - - - - -  -->
+	<target name="init" depends="coverage.init">
+		<!-- Setting proper permissions on resource files -->
+		<!-- Fail if mandatory parameters not defined -->
+		<fail message="Missing or empty project.name in build.properties" unless="project.name.defined" />
+		<fail message="Missing or empty project.version in build.properties" unless="project.version.defined" />
+		<!-- Set build timestamp (to be written to jar manifest) -->
+		<tstamp>
+			<format property="build.timestamp" pattern="yyyy-MM-dd HH:mm z" />
+		</tstamp>
+		<!-- initialize wsdl2java related directories -->
+		<mkdir dir="${src.dir}" />
+		<mkdir dir="${resources.dir}" />
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${codegen.outputdir}" />
+		<mkdir dir="${build.classes.dir}" />
+		<mkdir dir="${doc.dir}" />
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${jar.dir}" />
+		<mkdir dir="${manif.dir}" />
+		<mkdir dir="${log.dir}" />
+		<chmod file="${resources.dir}/**.*" perm="755"/>
+		<!-- FS -->
+	</target>
+	
+	<target name="distjar" depends="clean,manif">
+			<delete file="${jar.dir}/${jar.file.name}"/>
+			<copy todir="${build.classes.dir}">
+				<fileset dir="${codegen.incomingdir}/wsdl" includes="**/DeviceConfiguration*.wsdl" />
+			</copy>
+			
+			<copy todir="${build.classes.dir}/schemaorg_apache_xmlbeans/src">
+				<fileset dir="${codegen.incomingdir}/wsdl" includes="**/*.xsd" />
+			</copy>
+		
+		<copy todir="${build.classes.dir}">
+						<fileset dir="${codegen.incomingdir}/wsdl" includes="**/*.xsd" />
+					</copy>
+			
+			<jar destfile="${jar.dir}/${jar.file.name}" index="true" manifest="${manif.dir}/${manif.file.name}">
+				<fileset dir="${build.classes.dir}"/>
+				<fileset dir="${jar.dir}">
+					<include name="META-INF/**/*.*"/>	  			
+				</fileset>
+				<!--zipfileset src="${basedir}/build/resources/${jar.file}-XmlBeanResources.jar"/-->
+			</jar>
+		</target>
+	
+	<target name="dist" depends="distwar">
+			<delete dir="${manif.dir}" />
+			<!-- we do not need to leave copies of jar or aar around -->
+			<!--<delete file="${jar.dir}/${jar.file.name}"/>-->
+			<!--delete file="${jar.dir}/${jar.file}WS.aar"/-->
+		</target>
+	
+	
+	<target name="test" depends="testcomp">
+		<echo message="Started executing testcases" />
+		<junit printsummary="no" fork="yes" forkmode="perBatch" maxmemory="1024m" dir="${basedir}">
+			<classpath>
+				<pathelement location="${clover.jar}" />
+				<path refid="test.classpath" />
+			</classpath>
+			<formatter type="xml" />
+			<batchtest todir="${build.test.reports.dir}">
+				<fileset dir="${build.test.classes.dir}" includes="**/TestSuite.class" />
+			</batchtest>
+		</junit>
+		<echo message="testcases execution is done" />
+	</target>
+
+	<target name="checkstyle">
+		<echo>Starting checkstyle</echo>
+		<checkstyle config="rules/eMeter_checks.xml" failOnViolation="false">
+			<fileset dir="src" includes="**/*.java"/>
+			<formatter type="plain"/>
+			<formatter type="xml" toFile="build/checkstyle_errors.xml"/>
+		</checkstyle>
+		<echo>Checkstyle finished</echo>
+	</target>
+
+	<target name="comp" depends="init, resolve, generatecode">
+		<javac srcdir="${build.dir}/generated-src" destdir="${build.classes.dir}" debug="${build.debug}" deprecation="on" >
+					<include name="**/*.java" />
+					<classpath refid="compile.classpath" />
+				</javac>
+				<copy todir="${codegen.classes.dir}">
+					<fileset dir="${codegen.outputdir}">
+						<include name="**/*" />
+						<exclude name="**/*.java"/>
+					</fileset>
+				</copy>
+		<javac srcdir="${src.dir}"
+	             destdir="${build.classes.dir}"
+	             debug="${build.debug}"
+	             deprecation="on">
+			<include name="**/*.java"/>
+			<classpath refid="compile.classpath"/>
+			<classpath path="${jar.dir}/${schema.dist.jar.name}"/>
+		</javac>
+		<echo message="Compilation complete" />
+		<!-- copy all the data files to the build classpath as well -->
+		<copy todir="${build.classes.dir}">
+			<fileset dir     ="${src.dir}"
+	                  includes="**/*.properties,**/*.dtd,**/*.xml,**/*.xsd" />
+		</copy>
+
+	</target>
+
+	<target name="codegen">
+			<java fork="true" classname="com.emeter.hydrofw.application.PropertiesBootstrap"
+				classpathref="compile.classpath">
+				<arg value="codegen/properties/ebo-codegenerator.properties"/>
+			</java>
+		</target>
+	
+	<target name="generator" description="Code generation" >
+			<taskdef name="a2fCodeGen" classname="com.emeter.a2f.tools.AntCodeGenTask" classpathref="compile.classpath" />
+			<a2fCodeGen outputDir="${codegen.outputdir}" wsClientOutputDir="${codegen.wsClientOutputDir}" incomingDir="${codegen.incomingdir}" templateSourceJar="jar:file:${codegen.templates}"
+				generateExt="${codegen.generateExt}"
+				serverSideCode="${codegen.generate.serversidecode}" 
+				serverSideConfig="${codegen.generate.serversideconfig}" 
+				clientSideCode="${codegen.generate.clientsidecode}" 
+				clientSideConfig="${codegen.generate.clientsideconfig}" 
+				java2XmlDefinition="${codegen.generate.java2XmlDefinition}" 
+				xmlDefinition2Java="${codegen.generate.xmlDefinition2Java}" 
+				velocityLogFile="${codegen.logfile}" 
+				includeSecurityAnnotation="${codegen.includeSecurityAnnotation}"
+				webServiceCode="${codegen.generate.webservicecode}" 
+				generateFileHandler="${codegen.generate.generateFileHander}"
+				generateJMSHandler="${codegen.generate.generateJMSHander}"
+				xmlDataBinding="${codegen.generate.xmlDataBinding}">
+			</a2fCodeGen>
+		</target>
+	<property name="project.dir.name" value="em-adm" />
+	<property name="publish.adm.dir" location="${dist.dir}/publish/opt/${project.dir.name}" />
+	<property name="publish.file.name" value="${jar.file}-${project.version}-${build.number}.zip" />
+	<property name="publish.dir" location="${dist.dir}/publish" />	
+	<target name="publishLocal" depends="dist">
+			<copy todir="${publish.adm.dir}">
+				<fileset dir="${basedir}" includes="conf/**,db/**,resources/**,tools/**,*.txt,bin/**" excludes="**/.placeholder" />
+			</copy>
+			<copy file="${jar.dir}/${jar.file.name}" todir="${publish.adm.dir}/lib" />
+
+			<!-- move our db-build directory to db/oracle/ to prevent collision with netezza, if installed -->
+			<property name="org.db.build.dir" location="${publish.adm.dir}/db/DatabaseBuild" />
+			<property name="db.build.dir" location="${publish.adm.dir}/db/oracle/${project.dir.name}" />
+			<move todir="${db.build.dir}">
+				<fileset dir="${org.db.build.dir}" />
+			</move>
+
+			<!-- perform post-copy processing to DatabaseBuild -->
+			<chmod dir="${db.build.dir}" perm="644" includes="**/*.*" parallel="false" />
+			<chmod dir="${db.build.dir}" perm="744" includes="**/*.sh" parallel="false" />
+
+			<exec executable="zip" dir="${publish.dir}">
+				<arg value="-r" />
+				<arg value="${dist.dir}/${publish.file.name}" />
+				<arg value="." />
+			</exec>
+		</target>
+	
+	<target name="wsdlfiles">
+    	<fileset id="wsdl.files" dir="${codegen.incomingdir}/wsdl" includes="*.wsdl"/>
+	    <property name="prop.wsdl.files" refid="wsdl.files"/>
+	    <echo>${prop.wsdl.files}</echo>
+	</target>
+	
+	<target name="generatecode" depends="wsdlfiles">
+		<unzip src="${lib.dir}/em-ami-adapter.jar" dest="${codegen.incomingdir}/wsdl" overwrite="true">
+		  <patternset>
+		  	<include name="UniversalAMIInterface.xsd" />
+		  	<include name="UniversalAMIInterfaceTypes.xsd" />
+		  </patternset>
+		</unzip>
+		<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+			<classpath >
+				<pathelement location="${basedir}/lib/ant-contrib-1.0b3.jar"/>
+			</classpath>
+		</taskdef>
+		
+		<foreach list="${prop.wsdl.files}" delimiter=";" target="cxfWSDLToJava" param="prop.wsdl.file"/>
+		<antcall target="generator"/> 
+	</target>
+	
+	<target name="cxfWSDLToJava">
+		<java classname="org.apache.cxf.tools.wsdlto.WSDLToJava" fork="true">
+			<arg value="-impl"/>
+			<arg value="-b" />
+			<arg value="${codegen.incomingdir}/wsdl/Export.xsdconfig"/>
+			<arg value="-db"/>
+			<arg value="${codegen.generate.xmlDataBinding}"/>
+			<!--arg value="-p"/>
+			<arg value="http://www.emeter.com/energyip/amiinterface=com.emeter.energyip.amiinterface"/-->
+			<arg value="-wsdlLocation"/>
+			<arg value="classpath:${prop.wsdl.file}"/>
+			<arg value="-d"/>
+			<arg value="${codegen.outputdir}"/>			
+			<arg value="-compile"/>
+			<arg value="-classdir"/>
+			<arg value="${codegen.classes.dir}"/>
+			<arg value="${codegen.incomingdir}/wsdl/${prop.wsdl.file}"/>
+			<classpath>
+				<path refid="compile.classpath"/>
+			</classpath>
+		</java>
+	</target>
+	
+	<!-- Code Gen For XSD's -->
+	<path id="xbeans.classpath">
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<target name="unjar-xmlbeans-resources">
+		<unjar src="${{jar.file}-XmlBeanResources.jar}" dest="${resources.dir}" overwrite="true"/>
+	</target>
+	
+	<target name="genxbeans" depends="init" unless="local">
+		<taskdef name="xmlbean" classname="org.apache.xmlbeans.impl.tool.XMLBean">
+			<classpath refid="xbeans.classpath" />
+		</taskdef>
+		<unzip src="${lib.dir}/em-ami-adapter.jar" dest="${codegen.incomingdir}/wsdl" overwrite="true">
+				  <patternset>
+				  	<include name="UniversalAMIInterface.xsd" />
+				  	<include name="UniversalAMIInterfaceTypes.xsd" />
+				  </patternset>
+		</unzip>
+
+		<xmlbean javasource="1.5" srconly="true" schema="${codegen.incomingdir}/wsdl" srcgendir="${build.dir}/generated-src" classgendir="${build.classes.dir}" classpathref="xbeans.classpath" failonerror="true">
+		</xmlbean>
+	</target>
+	
+	
+	
+	<target name="distwar" depends="distjar">
+		<delete file="${jar.dir}/${war.file.name}"/>
+		<war destfile="${jar.dir}/${war.file.name}" webxml="web/WEB-INF/web.xml" manifest="${manif.dir}/${manif.file.name}" compress="true">
+			<lib dir="${lib.dir}">
+				<!-- patternset refid ="war.jar.files" /-->
+				<include name="a2f.jar" />
+                <include name="eidg.jar" />
+                <include name="eip-datalookup.jar" />
+                <include name="eip-message.jar" />
+                <include name="em-bo.jar" />
+                <include name="em-core.jar" />
+                <include name="em-ami-adapter.jar" />
+                <include name="em-ami-adapter-sdk.jar" />
+                <include name="em-visadmin.jar" />
+                <include name="kryo-2.20.jar" />
+				<include name="log4j-1.2.15.jar" />
+				<include name="SummaryHandler.jar" />
+				<include name="em-rules.jar" />
+			</lib>
+			<lib dir="${jar.dir}" includes="${jar.file.name}"/>
+			<fileset dir="web/">
+      			<include name="**/*.*"/>
+      			<exclude name="WEB-INF/*.*"/>
+   			</fileset>			
+		</war>
+		 <tstamp> <format property="touch.time" pattern="MM/dd/yyyy hh:mm aa"/>  </tstamp>
+		    <touch datetime="${touch.time}">
+		        <fileset dir="${lib.dir}" >
+		        	<include name="em-rules.jar" />
+		        </fileset>
+		    	<fileset dir="${jar.dir}" >
+		    		<include name="${jar.file.name}" />
+		    	</fileset>
+		    </touch>
+		<war warfile="${lib.dir}/UAAWSInboundAdapter.war" update="true">
+			<zipfileset dir="${jar.dir}" prefix="WEB-INF/lib">
+				<include name="${jar.file.name}" />
+			</zipfileset>
+			<zipfileset dir="${lib.dir}" prefix="WEB-INF/lib">
+				<include name="em-rules.jar"/>						
+			</zipfileset>
+		</war>
+	</target>	
+	<target name="distDemo" >
+		<mkdir dir="${demo.dir}/classes"/>
+		<delete quiet="true" file="${jar.dir}/em-admdemo.jar"/>
+		<javac srcdir="${demo.dir}/demosrc" destdir="${demo.dir}/classes" debug="${build.debug}" deprecation="on" >
+			<include name="**/*.java" />	<classpath refid="compile.classpath" />
+		</javac>				
+		<jar destfile="${jar.dir}/em-admdemo.jar" index="true" manifest="${manif.dir}/${manif.file.name}">
+			<fileset dir="${demo.dir}/classes"/>
+		</jar>
+		<delete dir="${demo.dir}/classes"/>
+	</target>	
+</project>

@@ -1,0 +1,43 @@
+<ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+    <info
+        organisation="com.emeter"   module="em-adm">
+	</info>
+	<publications>
+  		<artifact name="epic2018" type="jar" ext="jar"/>
+  	</publications>
+	<dependencies>
+      <dependency org="com.emeter" name="eip-commons" rev="${system.artifact.version}"/>
+	  <dependency org="com.emeter" name="em-bo" rev="${system.artifact.version}"/>
+	  <dependency org="com.emeter" name="em-core-bpm" rev="${system.artifact.version}"/>
+	  <!--<dependency org="com.emeter" name="em-unit-testingutils" rev="${system.artifact.version}"/>-->
+	  <dependency org="com.emeter" name="em-rules" rev="${system.artifact.version}"/>
+      <dependency org="org.apache" name="xerces-impl" rev="2.9.1"/>
+      <dependency org="com.emeter" name="rdu" rev="${system.artifact.version}"/>
+      <dependency org="com.emeter" name="em-lookupdata" rev="${system.artifact.version}"/>
+      <dependency org="com.emeter" name="eidg" rev="${system.artifact.version}"/>
+      
+      <dependency org="jsr94" name="jsr94" rev="1.1"/>
+      <dependency org="org.drools" name="knowledge-api" rev="5.4.0.Final"/>
+	    <dependency org="org.drools" name="drools-compiler" rev="5.4.0.Final"/>
+	    <dependency org="org.drools" name="drools-core" rev="5.4.0.Final"/>
+	    <dependency org="org.drools" name="drools-decisiontables" rev="5.4.0.Final"/>
+	    <dependency org="org.drools" name="drools-templates" rev="5.4.0.Final"/>
+	    <dependency org="org.drools" name="drools-jsr94" rev="5.4.0.Final"/>
+	    <dependency org="net.sf" name="jxl" rev="1.0"/>
+	    <dependency org="org.mvel" name="mvel2" rev="2.1.0.drools16"/>
+	    <dependency org="org.antlr" name="antlr" rev="3.0"/>
+	    <dependency org="org.easymock" name="easymock" rev="3.1"/>
+	    <dependency org="com.emeter" name="em-ami-adapter" rev="${system.artifact.version}"/>
+	    <dependency org="com.emeter" name="em-ami-adapter-sdk" rev="${system.artifact.version}"/>
+	    <dependency org="com.emeter" name="em-commonsvc" rev="${system.artifact.version}"/>
+		<dependency org="com.emeter" name="em-job" rev="${system.artifact.version}"/>
+		<dependency org="com.emeter" name="em-activitygateway" rev="${system.artifact.version}"/>
+		<dependency org="com.emeter" name="em-provisioning" rev="${system.artifact.version}"/>
+		<dependency org="com.emeter" name="em-workflow" rev="${system.artifact.version}"/>
+		<dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.1"/>
+		<dependency org="org.powermock" name="powermock-mockito-full" rev="1.7.1"/>
+	    <dependency org="org.mockito" name="mockito-all" rev="1.10.19"/>
+	    <dependency org="org.javassist" name="javassist" rev="3.21.0-GA"/> 
+	 </dependencies> 
+</ivy-module>

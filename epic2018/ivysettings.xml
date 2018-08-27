@@ -1,0 +1,107 @@
+<ivysettings>
+  <caches defaultCacheDir="${cache.ivy.dir}"/>
+
+  <credentials host="${ivy.repohost}.emeter.com" realm="Artifactory Realm" username="${ivy.credential.username}" passwd="${ivy.credential.password}" />
+
+  <resolvers>
+    <!-- common user.dir local filesystem resolver -->
+    <filesystem name="common">
+        <ivy pattern="${ivy.default.ivy.user.dir}/repository/[organisation]/[module]/[revision]/ivy.xml"/>
+        <artifact pattern="${ivy.default.ivy.user.dir}/repository/[organisation]/[module]/[revision]/[artifact].[ext]"/>
+    </filesystem>
+
+    <!-- project local workspace filesystem resolver -->
+    <filesystem name="project" m2compatible="false">
+        <ivy pattern="${ivy.settings.dir}/lib/repository/[organisation]/[module]/[revision]/ivy.xml"/>
+        <artifact pattern="${ivy.settings.dir}/lib/repository/[organisation]/[module]/[revision]/[artifact].[ext]"/>
+    </filesystem>
+    <!-- project local repository used primarily by escrow process -->
+    <filesystem name="standalone">
+	<ivy pattern="${ivy.settings.dir}/artifact_repository/[organisation]/[module]/[revision]/ivy.xml"/>
+	<artifact pattern="${ivy.settings.dir}/artifact_repository/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"/>
+    </filesystem>
+
+    <!-- EnergyIP resolvers -->
+    <url name="eip-snapshot" m2compatible="false">
+        <artifact pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-snapshot/[organization]/[module]/[revision]/[artifact].[ext]" />
+        <ivy pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-snapshot/[organization]/[module]/[revision]/ivy.xml" />
+    </url>
+    <url name="eip-milestone" m2compatible="false">
+        <artifact pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-milestone/[organization]/[module]/[revision]/[artifact].[ext]" />
+        <ivy pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-milestone/[organization]/[module]/[revision]/ivy.xml" />
+    </url>
+    <url name="eip-release" m2compatible="false">
+        <artifact pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-release/[organization]/[module]/[revision]/[artifact].[ext]" />
+        <ivy pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-release/[organization]/[module]/[revision]/ivy.xml" />
+    </url>
+    <url name="eip-3rdparty" m2compatible="false">
+        <artifact pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-3rdparty/[organization]/[module]/[revision]/[artifact].[ext]" />
+        <ivy pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-3rdparty/[organization]/[module]/[revision]/ivy.xml" />
+    </url>
+    <url name="eip-3rdparty-cloudera" m2compatible="false">
+        <artifact pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-3rdparty-cloudera/[organization]/[module]/[revision]/[artifact].[ext]" />
+        <ivy pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-3rdparty-cloudera/[organization]/[module]/[revision]/ivy.xml" />
+    </url>
+    <!-- eip-in_dev used so builds can pick up targeted EIP 8.x jars rather than either the latest 8.x milestone or release jars -->
+    <url name="eip-in_dev" m2compatible="false">
+        <artifact pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-in_dev/[organization]/[module]/[revision]/[artifact].[ext]" />
+        <ivy pattern="http://${ivy.repohost}.emeter.com/artifactory/eip-in_dev/[organization]/[module]/[revision]/ivy.xml" />
+    </url>
+
+    <!-- EnergyIP resolver chains -->
+    <chain name="eip-snapshot-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="eip-snapshot" />
+    </chain>
+    <chain name="eip-milestone-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="eip-milestone" />
+    </chain>
+    <chain name="eip-standalone-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="standalone" />
+    </chain>
+    <chain name="eip-release-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="eip-release" />
+    </chain>
+    <chain name="eip-snapshot-with-cloudera-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="eip-3rdparty-cloudera" />
+        <resolver ref="eip-snapshot" />
+    </chain>
+    <chain name="eip-release-with-cloudera-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="eip-3rdparty-cloudera" />
+        <resolver ref="eip-release" />
+    </chain>
+    <chain name="eip-release-then-snapshot-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="eip-release" />
+        <resolver ref="eip-snapshot" />
+    </chain>
+    <chain name="eip-release-then-snapshot-with-cloudera-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-3rdparty" />
+        <resolver ref="eip-3rdparty-cloudera" />
+        <resolver ref="eip-release" />
+        <resolver ref="eip-snapshot" />
+    </chain>
+    <!-- special resolver chain used only by builds incorporating specific EIP 8.x milestone jars -->
+    <chain name="eip-in_dev-chain" returnFirst="true">
+        <resolver ref="${local.ivy.resolver}" />
+        <resolver ref="eip-in_dev" />
+        <resolver ref="eip-3rdparty" />
+    </chain>
+	</resolvers>
+
+	<settings defaultResolver="${ivy.default.resolver}" />
+	
+</ivysettings>

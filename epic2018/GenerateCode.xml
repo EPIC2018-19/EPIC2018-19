@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="WsdlCodeGenerator" default="generatecode" basedir=".">
+
+	<property file="${basedir}/codegen-build.properties"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath >
+			<pathelement location="${basedir}/lib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+	
+	<property name="lib.dir" location="${basedir}/lib" />
+	<property name="build.dir" location="${basedir}/build" />
+	<property name="build.classes.dir" location="${build.dir}/classes" />
+	<property name="wsdl2java.dir" location="${build.dir}/wsdl2java" />
+	<property name="wsdlsrc.dir" location="${wsdl2java.dir}/src" />
+	<property name="wsdl2java.classes.dir" location="${build.classes.dir}" />
+	
+	<property name="mapping.xsdconfig.fileName" value="mapping.xsdconfig" />
+	<property name="cxf.log.level" value="quiet" /> <!-- Possible values are quiet and verbose -->
+	
+	<property name="codegen.generate.xmlDataBinding" value="xmlbeans"/>	
+	<property name="codegen.generate.java2XmlDefinition" value="false" />
+	<property name="codegen.generate.xmlDefinition2Java" value="true" />
+	<property name="codegen.generate.serversidecode" value="true" />
+	<property name="codegen.generate.serversideconfig" value="true" />
+	<property name="codegen.generate.clientsidecode" value="true" />
+	<property name="codegen.generate.clientsideconfig" value="true" />
+	<property name="codegen.includeSecurityAnnotation" value="false" />
+	<property name="codegen.generate.webservicecode" value="true" />
+	<property name="codegen.generate.generatewsdl" value="false" />
+	<property name="codegen.generate.generateendpoints" value="true"/>
+	<property name="codegen.generate.generateFileHander" value="false" />
+	<property name="codegen.generate.generateJMSHander" value="true" />
+	<property name="codegen.generateExt" value="true" />
+	<property name="codegen.incomingdir" location="${basedir}/resources/registry/metadata" />
+	<property name="codegen.outputdir" location="${build.dir}/a2f/src" />
+	<property name="codegen.templates" location="${lib.dir}/a2f.jar" />
+	<property name="codegen.logfile" location="${basedir}/logs/velocity.log" />
+	
+	<property name="rdu.resources.dir" location="${basedir}/resources/rdu" />
+	<property name="rdu.src.dir" location="${build.dir}/rdu/src" />
+	
+	<property name="ag.resources.dir" location="${basedir}/resources/registry/metadata/wsdl" />
+	<property name="ag.src.dir" location="${build.dir}/ag/src" />
+	
+	<path id="classpath">
+		<pathelement location="${wsdl2java.classes.dir}"/>
+		
+		<fileset dir="${lib.dir}">
+			<exclude name="**/cache/**/*.*"/>
+		</fileset>	
+		<pathelement location="${build.classes.dir}"/>
+	</path>
+
+	<target name="codegenClean">	   	
+		<delete dir="${wsdl2java.dir}" includeEmptyDirs="true" />
+		<delete dir="${codegen.outputdir}" includeEmptyDirs="true" />
+		<delete dir="${rdu.src.dir}" includeEmptyDirs="true" />
+	</target>
+	   	
+	 <target name="codegenInit" depends="codegenClean">
+	    <mkdir dir="${build.dir}"/>
+	    <mkdir dir="${build.classes.dir}"/>
+	 	<mkdir dir="${wsdl2java.dir}"/>
+	 	<mkdir dir="${wsdlsrc.dir}"/>
+	 	<mkdir dir="${wsdl2java.classes.dir}"/>
+	 	<mkdir dir="${codegen.outputdir}"/>
+	 	<mkdir dir="${rdu.src.dir}"/>
+	 </target>
+	
+	<target name="cxfWsdlFilesToJava">
+	    <fileset id="wsdl.files" dir="${codegen.incomingdir}/wsdl" includes="*.wsdl"/>
+	    <property name="prop.wsdl.files" refid="wsdl.files"/>
+	    <echo>${prop.wsdl.files}</echo>
+		
+		<foreach list="${prop.wsdl.files}" delimiter=";" target="cxfWSDLToJava" param="prop.wsdl.file"/>
+	</target>
+	    	
+	<target name="generatecode" depends="codegenInit, cxfWsdlFilesToJava">
+		<copy todir="${codegen.outputdir}">
+			<fileset dir="${wsdlsrc.dir}" />
+		</copy>		
+		
+		<antcall target="generator"/>
+		<antcall target="rdu-XsdToJava"/>
+		
+		<if>
+			<equals arg1="${codegen.generate.webservicecode}" arg2="true" />
+			<then>
+				<if>
+					<equals arg1="${codegen.generate.generatewsdl}" arg2="true"/>
+					<then>
+						<antcall target="GeneratedCode.comp"/>
+						<foreach list="${interfaces}" delimiter=";" target="cxfJavaToWS" param="interface"/>
+					</then>
+				</if>
+			</then>
+		</if>
+	</target>
+
+	<target name="generator" description="Code generation">
+		<taskdef name="a2fCodeGen" classname="com.emeter.a2f.tools.AntCodeGenTask" classpathref="classpath" />
+		<a2fCodeGen outputDir="${codegen.outputdir}" wsClientOutputDir="${codegen.outputdir}" incomingDir="${codegen.incomingdir}" templateSourceJar="jar:file:${codegen.templates}" 
+			generateExt="${codegen.generateExt}" 
+			serverSideCode="${codegen.generate.serversidecode}" 
+			serverSideConfig="${codegen.generate.serversideconfig}" 
+			clientSideCode="${codegen.generate.clientsidecode}" 
+			clientSideConfig="${codegen.generate.clientsideconfig}" 
+			java2XmlDefinition="${codegen.generate.java2XmlDefinition}" 
+			xmlDefinition2Java="${codegen.generate.xmlDefinition2Java}" 
+			velocityLogFile="${codegen.logfile}" 
+			includeSecurityAnnotation="${codegen.includeSecurityAnnotation}" 
+			webServiceCode="${codegen.generate.webservicecode}" 
+			generateFileHandler="${codegen.generate.generateFileHander}"
+			generateJMSHandler="${codegen.generate.generateJMSHander}"
+			xmlDataBinding="${codegen.generate.xmlDataBinding}">
+		</a2fCodeGen>
+		
+		<javac srcdir="${codegen.outputdir}" destdir="${build.classes.dir}" debug="${build.debug}" deprecation="on" fork="true">
+			<include name="**/*.java" />
+			<classpath refid="classpath" />
+		</javac>
+		<copy todir="${build.classes.dir}">
+			<fileset dir="${codegen.outputdir}">
+				<include name="**/*" />
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- Code Gen For XSD's -->
+	<path id="xmlbean.classpath">
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<target name="rdu-XsdToJava" description="Java classes generation for RDU Xsd files">
+		<taskdef name="xmlbean" classname="org.apache.xmlbeans.impl.tool.XMLBean" classpathref="xmlbean.classpath" />
+		<if>
+			<available file="${rdu.resources.dir}" type="dir"/>
+			<then>
+				<xmlbean javasource="1.5" srcgendir="${rdu.src.dir}" classgendir="${build.classes.dir}" classpathref="xmlbean.classpath" failonerror="true">
+					<fileset dir="${rdu.resources.dir}" includes="**/*.xsd **/*.xsdconfig" />
+				</xmlbean>
+			</then>
+			<else>
+				<echo message="No RDU xsd files found at: ${rdu.resources.dir}" />
+			</else>
+		</if>
+	</target>
+	
+	<target name="cxfJavaToWS" depends="GeneratedCode.comp" >
+		<java classname="org.apache.cxf.tools.java2ws.JavaToWS" fork="true">
+			<arg value="-wsdl" />
+			<arg value="-o" />
+			<arg value="${interface}.wsdl" />
+			<arg value="-d" />
+			<arg value="${build.dir}/wsdl" />
+			<arg value="-cp" />
+			<arg value="${build.classes.dir}" />
+			<arg value="${interface}" />
+			<classpath>
+				<path refid="classpath" />
+			</classpath>
+		</java>
+	</target>
+
+	<target name="cxfWSDLToJava">
+		<java classname="org.apache.cxf.tools.wsdlto.WSDLToJava" fork="true" failonerror="true">
+			<arg value="-impl"/>
+			<arg value="-db"/>
+			<arg value="${codegen.generate.xmlDataBinding}"/>
+			<arg value="-d"/>
+			<arg value="${wsdlsrc.dir}"/>
+			<arg value="-b"/>
+			<arg value="${codegen.incomingdir}/wsdl/${mapping.xsdconfig.fileName}"/>
+			<arg value="-compile"/>
+			<arg value="-classdir"/>
+			<arg value="${wsdl2java.classes.dir}"/>
+			<arg value="-${cxf.log.level}"/>
+			<arg value="${codegen.incomingdir}/wsdl/${prop.wsdl.file}"/>
+			<classpath>
+				<path refid="classpath"/>
+			</classpath>
+		</java>
+	</target>
+
+	<target name="GeneratedCode.comp" description="compile generated code">
+        <subant target="GeneratedCode.comp">
+        	<fileset dir="${basedir}" includes="${basedir}/build.xml"/>
+        </subant>  
+	</target>
+	
+</project>

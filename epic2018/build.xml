@@ -1,0 +1,461 @@
+<?xml version="1.0"?>
+<!-- ======================================================================= -->
+<!--                      DO NOT MODIFY THIS FILE!                           -->
+<!-- The name of the project and its version number are defined in the       -->
+<!-- build.properties file as "project.name" and "project.version"           -->
+<!-- ======================================================================= -->
+<project default="comp" basedir="."  name="em-adm" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property environment="env"/>
+	<property file="${basedir}/user.properties"/>
+	<property file="${basedir}/build.properties"/>
+
+
+        <!-- we get ver.prop here because the path is incorrect in the common.build file  -->
+        <get src="${p4.web.url}/${p4.config.path}/build.properties${target.energyip.change.number}"
+             dest="${ver.prop.file}" skipexisting="true"/>
+
+        <get src="${p4.web.url}/${p4.platform.path}/common.build.xml${target.energyip.change.number}"
+             dest="${common.build.file}" skipexisting="true"/>
+
+	<import file="${common.build.file}"  as="commonBuild"/>
+
+	<import file="${basedir}/GenerateCode.xml" as="generateCode"/>
+	
+	<property name="schema.dist.jar.name" value="${project.name}XSD.jar"/>
+	<property name="war.file.name" value="em-adm.war" />
+	<property name="war.temp.dir" value="${build.dir}/wartempdir" />
+	<property name="resources.dir" value="${basedir}/resources" />
+	<property name="web.file.name"   value="${project.name}_em-ui.zip"/>
+	<property name="web.uaafile.name"   value="em-adm_UAAWSInboundAdapter.zip"/>
+	<property name="web.agwebinfile.name"   value="em-adm_AGWebInboundAdapter.zip"/>
+	<property name="publish.project.web.dir" location="${dist.dir}/publish/opt/${project.name}/web"/> 
+	
+	<property name="testlib.dir"         location="${testsrc.dir}/lib"/>
+	<property name="postdeploylib.dir"   location="${basedir}/postdeploy/lib"/>
+	<property name="bin.dir"             location="${basedir}/bin"/>
+	<property name="build.bin.dir"       location="${basedir}/build.bin"/>
+        <property name="db.dir"              location="${basedir}/db"/>
+        <property name="schema.dir"          location="${db.dir}/DatabaseBuild"/>
+	<property name="project.dir.name"    value="em-adm" />
+	<property name="publish.dir"         location="${dist.dir}/publish" />
+	<property name="publish.project.dir" location="${dist.dir}/publish/opt/${project.dir.name}" />
+
+        <property name="version.file"      value="${publish.project.dir}/version.txt"/>
+        <property name="version.id"        value="${project.name}-${app.version}-${build.number}"/>
+        <property name="version.json.file" location="${publish.project.dir}/version.json" />
+        <property name="publish.file.name" value="${version.id}.zip"/>
+	<property name="publish.dbfile.name"           value="${version.id}_db.zip"/>
+	<property name="testenved.bin"       location="${build.bin.dir}/testenved.sh"/>
+	<property name="use.default.testenv" value="true"/>
+	
+	<!-- Intialization of the neccessary directories - - - - - - - - - - - -  -->
+	<!--	<target name="init" depends="commonBuild.init , coverage.init">
+		<chmod file="${resources.dir}/**.*" perm="755"/>
+	</target> -->
+
+
+        <target name="generate-version-files" unless="have.version.files">
+            <!-- set the build timestamp to the current time -->
+            <tstamp>
+                <format property="build.timestamp" pattern="yyyy-MM-dd HH:mm:ss"/>
+            </tstamp>
+
+            <!-- write the version.json file -->
+            <echo message="generating version.json"/>
+            <echo file="${version.json.file}">{
+  "product_name": "${project.name}",
+  "product_version": "${app.version}",
+  "version_major": "${app.version.major}",
+  "version_minor": "${app.version.minor}",
+  "version_service_pack": "${app.version.service}",
+  "version_patch": "0",
+  "build_number": "${build.number}",
+  "build_tstamp": "${build.timestamp}",
+  "version_txt_string": "${version.id}"
+}${line.separator}</echo>
+
+            <!-- write the version.txt file (deprecated) -->
+            <echo message="generating version.txt"/>
+            <echo message="${version.id}${line.separator}"
+                  file="${version.file}" />
+
+            <property name="have.version.files" value="true"/>
+        </target>
+
+	
+	   <target name="init" >
+	      <!-- Fail if mandatory parameters not defined -->
+	      <fail message="Missing or empty project.name in build.properties"
+	            unless= "project.name.defined" />
+	      <fail message="Missing or empty project.version in build.properties"
+	            unless= "project.version.defined" />
+	      <!-- Set build timestamp (to be written to jar manifest) -->
+	      <tstamp>
+	         <format property="build.timestamp" pattern="yyyy-MM-dd HH:mm z"/>
+	      </tstamp>
+
+	      <!-- initialize build related directories -->
+	      <mkdir dir="${build.dir}"/>
+	      <mkdir dir="${resources.dir}"/>
+	      <mkdir dir="${build.classes.dir}"/>
+	      <mkdir dir="${doc.dir}"/>
+	      <mkdir dir="${dist.dir}"/>
+	      <mkdir dir="${jar.dir}"/>
+	      <mkdir dir="${manif.dir}"/>
+	      <mkdir dir="${log.dir}"/>
+	      <mkdir dir="${schema.dist.dir}/build"/>
+
+	      <!-- initialize test related directories -->
+	      <mkdir dir="${build.test.dir}"/>
+	      <mkdir dir="${build.test.classes.dir}"/>
+	      <mkdir dir="${build.test.data.dir}"/>
+	      <mkdir dir="${build.test.reports.dir}"/>
+	   	<chmod file="${resources.dir}/**.*" perm="755"/>
+	   </target>
+	
+	<path id="compile.classpath">
+		<!-- include this project's generated classes -->
+		<pathelement path="${build.classes.dir}"/>
+		<fileset dir="${lib.dir}">
+			<!-- exclude jar built by this project -->
+			<exclude name="${jar.file}"/>
+			<exclude name="**/cache/**/*.*"/>
+		    <patternset id="classpath.excludes">
+			<exclude name="**/MANIFEST.MF"/>
+			<exclude name="**/*.sh"/>
+			<exclude name="**/*placeholder"/>
+			<exclude name="**/*.xls"/>
+			<exclude name="**/*.xsl"/>
+			<exclude name="**/*.yml"/>
+			<exclude name="**/*.txt"/>
+			<exclude name="**/*.css"/>
+			<exclude name="**/*.original"/>
+			<exclude name="**/*.xml"/>
+			<exclude name="**/*.bpmn2"/>
+			<exclude name="**/*.wid"/>
+			<exclude name="**/*.conf"/>
+			<exclude name="**/*.rptdesign"/>
+			<exclude name="**/*.properties"/>
+			<exclude name="**/*.xsd"/>
+			<exclude name="**/*.wsdl"/>
+			<exclude name="**/*.classpath"/>
+			<exclude name="**/*.png"/>
+			<exclude name="**/*.js"/>
+			<exclude name="**/*.rptlibrary"/>
+			<exclude name="**/*.gif"/>
+			<exclude name="**/*.sql"/>
+			<exclude name="**/*.jpg"/>
+                        <exclude name="**/clover.jar"/>
+		    </patternset>
+		</fileset>
+	</path>
+	
+	<target name="distjar" depends="manif">
+		<delete file="${jar.dir}/${jar.file.name}"/>
+		<delete file="em-ui-${jar.file}-webcontent.war" />
+		<copy todir="${build.classes.dir}">
+			<fileset dir="${codegen.incomingdir}/wsdl" includes="**/*.xsd,**/DeviceConfiguration*.wsdl" />
+		</copy>
+		
+		<copy todir="${build.classes.dir}/schemaorg_apache_xmlbeans/src">
+			<fileset dir="${codegen.incomingdir}/wsdl" includes="**/*.xsd" />
+		</copy>
+		
+		<jar destfile="${jar.dir}/${jar.file.name}" index="true" manifest="${manif.dir}/${manif.file.name}">
+			<fileset dir="${build.classes.dir}"/>
+			<fileset dir="${resources.dir}">
+				<include name="processFlow/**/*.*"/>	  			
+			</fileset>
+			<fileset dir="${jar.dir}">
+				<include name="META-INF/**/*.*"/>	  			
+			</fileset>
+		</jar>
+		<jar destfile="${jar.dir}/em-ui-${jar.file}-webcontent.war" index="true" manifest="${manif.dir}/${manif.file.name}" compress="true">
+			<zipfileset dir="${basedir}/Web">
+				<include name="deviceManager.html" />
+				<include name="dccDeviceManager.html" />
+				<include name="js/config/*" />
+				<include name="js/json/advancedDeviceManagement/authorize/*" />
+				<include name="js/json/advancedDeviceManagement/side_menus/*" />
+				<include name="js/json/advancedDeviceManagement/screens.json" />
+				<include name="js/json/advancedDeviceManagement/dcc_screens.json" />
+				<include name="js/app/controller/advancedDeviceManagement/*" />
+				<include name="js/app/model/advancedDeviceManagement/*" />
+				<include name="js/app/store/advancedDeviceManagement/*" />
+				<include name="js/app/view/advancedDeviceManagement/*" />
+				<include name="resources/advancedDeviceManagement/css/*" />
+				<include name="resources/advancedDeviceManagement/images/*" />
+				<include name="resources/advancedDeviceManagement/sass/*" />
+			</zipfileset>
+		</jar>
+	</target>
+	
+	<target name="dist" depends="distjar">
+		<delete dir="${manif.dir}" />
+	</target>
+			
+	<path id="test.classpath">
+		<pathelement path="${build.classes.dir}"/>
+		<fileset dir="${lib.dir}">
+			<exclude name="**/javaee-api-7.0.jar"/>
+			<exclude name="**/cache/javax/javaee-api/jars/javaee-api-7.0-7.0.jar"/>
+			<exclude name="**/cxf-rt-transports-http-3.0.3.jar"/>
+			<exclude name="**/cxf-rt-transports-http-jetty-3.0.3.jar"/>
+			<exclude name="**/cache/org.apache.cxf/cxf-rt-transports-http/jars/cxf-rt-transports-http-3.0.3-3.0.3.jar"/>
+			<exclude name="**/cache/org.apache.cxf/cxf-rt-transports-http-jetty/jars/cxf-rt-transports-http-jetty-3.0.3-3.0.3.jar"/>
+		</fileset>
+		<fileset dir="${testlib.dir}"/>
+		<pathelement path="${build.test.classes.dir}" />
+		<pathelement path="${junit.jar}"/>
+	</path>
+
+	<target name="test" depends="testcomp">
+           <if>
+                <isfalse value="${use.default.testenv}"/>
+                <then>
+                  	<echo message="Updating test environment configuration ..." />
+                    <echo message="Using ${schema.suffix} DB ..." />
+                    <echo message="Using service name ${service.name} ..." />
+                    <exec executable="${testenved.bin}" dir="${basedir}" failonerror="true">
+                        <arg value="-f" />
+                        <arg value="${basedir}/test/testenv.properties" />
+                        <arg value="-s" />
+                        <arg value="${schema.suffix}" />
+                        <arg value="-n" />
+                        <arg value="${service.name}" />
+						<arg value="-d" />
+						<arg value="${db.host.name}" />
+                        <arg value="-h" />
+                        <arg value="${deploy.host.fqdn}" />
+                        <arg value="-i" />
+                        <arg value="${deploy.host.ipaddr}" />
+                    </exec>
+                </then>
+            </if>
+		
+		<echo message="Started executing testcases" />
+		<junit printsummary="no" fork="yes" forkmode="perBatch" maxmemory="2048m" dir="${basedir}">
+			<classpath>
+				<pathelement location="${clover.jar}" />
+				<path refid="compile.classpath" />
+				<pathelement path="${build.test.classes.dir}" />
+				<fileset dir="${testlib.dir}"/>
+			</classpath>
+			<formatter type="xml" />
+			<batchtest todir="${build.test.reports.dir}">
+				<fileset dir="${build.test.classes.dir}" includes="**/TestSuite.class" /> 
+				<!--<fileset dir="${build.test.classes.dir}" includes="**/rs/TestProjectResource.class" />-->
+				<!-- <fileset dir="${build.test.classes.dir}" includes="**/rs/TestAdvancedDeviceResource.class" /> -->
+				<!-- <fileset dir="${build.test.classes.dir}" includes="**/ag/TestBulkOperationHandler.class" /> 
+				<fileset dir="${build.test.classes.dir}" includes="**/ami/AmiTestSuite.class" />
+				 <fileset dir="${build.test.classes.dir}" includes="**/mgmt/Test*.class" />
+				<fileset dir="${build.test.classes.dir}" includes="**/processor/Test*.class" />
+				<fileset dir="${build.test.classes.dir}" includes="**/devicegroup/TestDeviceGroup.class" />
+				<fileset dir="${build.test.classes.dir}" includes="**/project/controller/Test*.class" />
+				<fileset dir="${build.test.classes.dir}" includes="**/project/dispatcher/Test*.class" />
+				<fileset dir="${build.test.classes.dir}" includes="**/project/propsvc/ProjectActionMetaTester.class" />
+				<fileset dir="${build.test.classes.dir}" includes="**/rdu/TestRDUExport.class" />
+				<fileset dir="${build.test.classes.dir}" includes="**/rdu/TestRDUImport.class" /> -->
+			</batchtest>
+		</junit>
+		<echo message="testcases execution is done" />
+	</target>
+
+    <target name="testPostdeploy" depends="testcomp">
+        <if>
+             <isfalse value="${use.default.testenv}"/>
+             <then>
+               	<echo message="Updating test environment configuration ..." />
+                 <echo message="Using ${schema.suffix} DB ..." />
+                 <echo message="Using service name ${service.name} ..." />
+                 <exec executable="${testenved.bin}" dir="${basedir}" failonerror="true">
+                     <arg value="-f" />
+                     <arg value="${basedir}/test/testenv.properties" />
+                     <arg value="-s" />
+                     <arg value="${schema.suffix}" />
+                     <arg value="-n" />
+                     <arg value="${service.name}" />
+					 <arg value="-d" />
+					 <arg value="${db.host.name}" />
+                     <arg value="-h" />
+                     <arg value="${deploy.host.fqdn}" />
+                     <arg value="-i" />
+                     <arg value="${deploy.host.ipaddr}" />
+                 </exec>
+             </then>
+         </if>
+		<echo message="Started executing Postdeploy testcases" />
+		<junit printsummary="no" fork="yes" maxmemory="1024m">
+			<classpath>
+				<fileset dir="${lib.dir}">					
+					<exclude name="**/jettison-1.3.jar"/>
+					<exclude name="**/cache/org.codehaus.jettison/jettison/jars/jettison-1.3-1.3.jar"/>
+				</fileset>
+				<fileset dir="${postdeploylib.dir}" />
+				<path refid="test.classpath" />
+			</classpath>
+            <formatter type="xml" />
+            <batchtest todir="${build.test.reports.dir}">
+				<fileset dir="${build.test.classes.dir}" includes="**/PostDeployTestSuite.class" />
+            </batchtest>
+        </junit>
+        <echo message="Postdeploy testcases execution is done" />
+	</target>
+
+    <target name="gen-version-file">
+        <echo message="${project.name}-${project.version}-${build.number}${line.separator}" file="${basedir}/version.txt"/>
+    </target>
+
+    <target name="schema-refresh-prep" depends="gen-version-file">
+        <copy todir="${schema.dir}" file="${basedir}/version.txt"/>
+    </target>
+
+	<target name="comp" depends="wsdl2java, coverage.init">
+		<javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${build.debug}" deprecation="on">
+			<include name="**/*.java"/>			
+			<classpath refid="compile.classpath"/>
+		</javac>
+		<echo message="Compilation complete" />
+		<!-- copy all the data files to the build classpath as well -->
+		<copy todir="${build.classes.dir}">
+			<fileset dir="${src.dir}" includes="**/*.properties,**/*.dtd,**/*.xml,**/*.xsd" />
+		</copy>
+	</target>
+	
+	<target name="wsdl2java" depends="init, resolve">
+		<unzip src="${lib.dir}/em-ami-adapter.jar" dest="${codegen.incomingdir}/wsdl" overwrite="true">
+		  <patternset>
+		  	<include name="UniversalAMIInterface.xsd" />
+		  	<include name="UniversalAMIInterfaceTypes.xsd" />
+		  </patternset>
+		</unzip>
+		
+		<unzip src="${lib.dir}/em-activitygateway.jar" dest="${codegen.incomingdir}/wsdl" overwrite="true">
+			<patternset>
+				<include name="EIP_ActivityGateway_CIMInterface.xsd" />
+				<include name="Message.xsd" />
+				<include name="OMS_StormMode.xsd" />
+			</patternset>
+		</unzip>
+		
+		<antcall target="generateCode.generatecode">
+			<param name="wsdlsrc.dir" value="${build.dir}/generated-src"/>
+			<param name="codegen.outputdir" value="${build.dir}/generated-src"/>
+			<param name="rdu.src.dir" value="${build.dir}/generated-src"/>
+			<param name="codegen.generate.generateFileHander" value="true"/>
+			<param name="mapping.xsdconfig.fileName" value="Export.xsdconfig"/>			
+		</antcall>
+	</target>
+	
+	<target name="publish" depends="generate-version-files, dist">
+
+		<copy todir="${publish.project.dir}">
+			<fileset dir="${basedir}" includes="resources/**,tools/**,conf/**,bin/**,postdeploy/**"
+		           excludes="**/placeholder,**/build.xml"/>
+		</copy>
+		<chmod dir="${publish.project.dir}/bin" perm="744" includes="**/*.sh" />
+		
+		<copy file="${jar.dir}/${jar.file.name}" todir="${publish.project.dir}/lib"/>
+		
+		<copy file="${jar.dir}/em-ui-${jar.file}-webcontent.war" todir="${publish.project.dir}/lib" />
+		
+		<copy file="${lib.dir}/em-lookupdata.jar" todir="Web/WEB-INF/lib"/>
+		<copy file="${lib.dir}/em-job.jar" todir="Web/WEB-INF/lib"/>
+		<copy file="${lib.dir}/eip-commons.jar" todir="Web/WEB-INF/lib"/>
+		
+		<copy todir="${publish.project.dir}/db/oracle/em-adm">
+			<fileset dir="${basedir}/db/DatabaseBuild" includes="**"/>
+		</copy>
+		<copy file="${basedir}/db/Utilities/upgrade_roadmap.txt" todir="${publish.project.dir}/db/oracle/em-adm/incremental/runtime"/>
+		<chmod dir="${publish.project.dir}/db" perm="744" includes="**/*.sh" />
+		
+		<!--<zip destfile="${publish.project.web.dir}/${web.file.name}">
+			    <zipfileset dir="${basedir}/Web">
+                <include name="deviceManager.html" />
+				<include name="dccDeviceManager.html" />
+				<include name="js/config/*" />
+			    <include name="js/json/advancedDeviceManagement/authorize/*" />
+			    <include name="js/json/advancedDeviceManagement/side_menus/*" />
+                <include name="js/json/advancedDeviceManagement/screens.json" />
+				<include name="js/json/advancedDeviceManagement/dcc_screens.json" />
+				<include name="js/app/controller/advancedDeviceManagement/*" />
+				<include name="js/app/model/advancedDeviceManagement/*" />
+				<include name="js/app/store/advancedDeviceManagement/*" />
+				<include name="js/app/view/advancedDeviceManagement/*" />
+			    <include name="resources/advancedDeviceManagement/css/*" />	
+			    <include name="resources/advancedDeviceManagement/images/*" />	
+			    <include name="resources/advancedDeviceManagement/sass/*" />
+				<include name="WEB-INF/lib/${jar.file.name}"/>			    
+			    </zipfileset>
+		</zip> 
+		<zip destfile="${publish.project.web.dir}/${web.uaafile.name}">
+			<zipfileset dir="${basedir}/Web">
+				<include name="WEB-INF/lib/${jar.file.name}"/>
+				<include name="WEB-INF/lib/em-lookupdata.jar"/>
+			</zipfileset>
+		</zip>
+		
+		<zip destfile="${publish.project.web.dir}/${web.agwebinfile.name}">
+			<zipfileset dir="${basedir}/Web">
+				<include name="WEB-INF/lib/${jar.file.name}"/>
+				<include name="WEB-INF/lib/em-job.jar"/>
+				<include name="WEB-INF/lib/eip-commons.jar"/>
+			</zipfileset>
+	    </zip>-->
+		<!--create migration package (avoid Ant zip because permissions may not be set correctly in zip) -->
+		<exec executable="/usr/bin/zip" dir="${publish.dir}">
+            <arg value="-r" />
+            <arg value="${dist.dir}/${publish.file.name}" />
+            <arg value="." />
+        </exec>
+        
+        <exec executable="/usr/bin/zip" dir="${publish.dir}">
+            <arg value="-r" />
+            <arg value="${dist.dir}/${publish.dbfile.name}" />
+            <arg value="opt/${project.name}/db" />
+            <arg value="opt/${project.name}/version.txt" />
+        </exec>
+		
+		<ivy:publish
+		    artifactspattern="${ivy.pub.artifact.pattern}"
+		    resolver="${ivy.pub.resolver}"
+		    pubrevision="${ivy.pub.revision}"
+		    status="${ivy.pub.status}"
+		    forcedeliver="${ivy.pub.forcedeliver}"
+		    overwrite="${ivy.pub.overwrite}" />
+	</target>
+	
+		<target name="testcomp" depends="commonBuild.testcomp">
+			<!-- Copy All resources over to the test classpath without excluding. -->
+			<copy todir="${build.test.classes.dir}">
+				<fileset dir="${testsrc.dir}" />
+			</copy>
+			<copy todir="${build.test.classes.dir}">
+				<fileset dir="${resources.dir}" includes="**/*.*" />
+			</copy>
+		</target>
+		
+	<!-- java docs publish-->
+    <target name="publishDoc">
+		<property name="docs.version.id" value="${project.name}-${project.version}-docs_api-extensions"/>
+		<property name="docs.publish.file.name" value="${docs.version.id}.zip"/>
+		<property name="docs.publish.dir" value="${publish.dir}/javadoc"/>
+
+		<delete dir="${docs.publish.dir}" includeEmptyDirs="true" />
+		<delete file="${publish.dir}/${docs.publish.file.name}"/>
+
+		<mkdir dir="${docs.publish.dir}"/>
+		<copy todir="${docs.publish.dir}">
+			<fileset dir="${doc.dir}"/>
+		</copy>
+
+		<exec executable="/usr/bin/zip" dir="${docs.publish.dir}">
+			<arg value="-r" />
+			<arg value="${dist.dir}/${docs.publish.file.name}" />
+			<arg value="." />
+		</exec>
+		
+		<delete dir="${docs.publish.dir}" includeEmptyDirs="true" />
+	</target>
+	
+</project>

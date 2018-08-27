@@ -1,0 +1,260 @@
+<con:Application xmlns:con="http://www.emeter.com/energyip/Configuration/8.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <con:description>Workflow application used for Orchestrating Provisioning Process.</con:description>
+  <con:groupPath>/Applications/</con:groupPath>
+  <con:introducedInVersion>8.6</con:introducedInVersion>
+  <con:name>EPIC2018</con:name>
+  <con:isSingleInstance>false</con:isSingleInstance>
+  <con:libraries>
+	
+	<con:libraryName>em-ui-em-adm-webcontent.war</con:libraryName>
+	<con:libraryName>spring-boot-1.5.9.RELEASE.jar</con:libraryName>
+	<con:libraryName>spring-boot-loader-1.5.9.RELEASE.jar</con:libraryName>
+	<con:libraryName>spring-boot-starter-1.5.9.RELEASE.jar</con:libraryName>
+	<con:libraryName>spring-boot-starter-validation-1.5.9.RELEASE.jar</con:libraryName>
+	<con:libraryName>spring-boot-autoconfigure-1.5.9.RELEASE.jar</con:libraryName>
+	<!-- LibProfile_eMeter.xml -->
+    <con:libraryName>a2f.jar</con:libraryName>
+    <con:libraryName>a2f-kafka.jar</con:libraryName>
+    <con:libraryName>a2fXSD.jar</con:libraryName>
+    <con:libraryName>AssetDataChangeDelivery.jar</con:libraryName>
+    <con:libraryName>cdci-end-control-device.jar</con:libraryName>
+    <con:libraryName>dbpoller.jar</con:libraryName>
+    <con:libraryName>em-cts-core.jar</con:libraryName>
+    <con:libraryName>eidg-feeder.jar</con:libraryName>
+    <con:libraryName>eidg-refresher.jar</con:libraryName>
+    <con:libraryName>eidg.jar</con:libraryName>
+    <con:libraryName>eidgc.jar</con:libraryName>
+    <con:libraryName>eidg-schema.jar</con:libraryName>
+    <con:libraryName>eipHostAgent.jar</con:libraryName>
+    <con:libraryName>eip-framer.jar</con:libraryName>
+    <con:libraryName>em-bo.jar</con:libraryName>
+    <con:libraryName>em-cas.jar</con:libraryName>
+    <con:libraryName>em-commonsvc.jar</con:libraryName>
+    <con:libraryName>em-core.jar</con:libraryName>	
+    <con:libraryName>em-jettylauncher.jar</con:libraryName>
+    <con:libraryName>em-job.jar</con:libraryName>
+    <con:libraryName>em-lookupdata.jar</con:libraryName>
+	<con:libraryName>em-export-api.jar</con:libraryName>
+    <con:libraryName>em-repository.jar</con:libraryName>
+    <con:libraryName>rdu-xsd.jar</con:libraryName>
+    <con:libraryName>rdu.jar</con:libraryName>
+    <con:libraryName>SummaryHandler.jar</con:libraryName>
+    <con:libraryName>systemconsole-xsd.jar</con:libraryName>
+    <con:libraryName>systemconsole.jar</con:libraryName>
+    <con:libraryName>eip-datalookup.jar</con:libraryName>
+    <con:libraryName>eip-message.jar</con:libraryName>
+    <con:libraryName>em-mudr-svcs.jar</con:libraryName>
+    <con:libraryName>em-core-bpm.jar</con:libraryName>
+    <con:libraryName>DataChangeEventPublisher.jar</con:libraryName>
+    <con:libraryName>em-provisioning.jar</con:libraryName>
+    <con:libraryName>em-reportscommon.jar</con:libraryName>
+    <con:libraryName>em-birtengine.jar</con:libraryName>
+	<con:libraryName>em-vc.jar</con:libraryName>
+	<con:libraryName>em-rules.jar</con:libraryName>
+	<con:libraryName>eip-commons.jar</con:libraryName>	
+	<!-- LibProfile_ThirdParty.xml -->
+	<con:libraryName>mail-1.4.1.jar</con:libraryName>
+    <con:libraryName>em-activemq-all-5.11.3.jar</con:libraryName>
+   <!-- <con:libraryName>ant-1.8.1.jar</con:libraryName>-->
+    <con:libraryName>antlr-3.0.jar</con:libraryName>
+    <con:libraryName>aopalliance-1.0.jar</con:libraryName>
+    <con:libraryName>asm-5.0.3.jar</con:libraryName>
+    <con:libraryName>aspectjrt-1.8.1.jar</con:libraryName>
+    <con:libraryName>aspectjweaver-1.8.1.jar</con:libraryName>
+    <con:libraryName>beastax-1.2.0.jar</con:libraryName>
+    <con:libraryName>cas-client-core-3.1.10.jar</con:libraryName>
+    <con:libraryName>cglib-nodep-2.2.3.jar</con:libraryName>
+    <con:libraryName>commons-beanutils-1.6.jar</con:libraryName>
+    <con:libraryName>commons-codec-1.4.jar</con:libraryName>
+    <con:libraryName>commons-collections-3.2.2.jar</con:libraryName>
+    <con:libraryName>commons-dbcp2-2.2.0.jar</con:libraryName>
+    <con:libraryName>commons-email-1.3.jar</con:libraryName>
+	<con:libraryName>httpclient-4.5.1.jar</con:libraryName>
+	<con:libraryName>httpcore-4.4.4.jar</con:libraryName>
+	<con:libraryName>commons-httpclient-3.1.jar</con:libraryName>
+    <con:libraryName>commons-io-2.4.jar</con:libraryName>
+    <con:libraryName>commons-lang-2.4.jar</con:libraryName>
+    <con:libraryName>commons-logging-1.1.3.jar</con:libraryName>
+    <con:libraryName>commons-net-3.3.jar</con:libraryName>
+    <con:libraryName>commons-pool2-2.2.jar</con:libraryName>
+    <con:libraryName>commons-vfs2-2.0.jar</con:libraryName>
+
+    <!-- beginning of cxf 3.0.3 related updates  -->
+    <con:libraryName>wss4j-bindings-2.0.2.jar</con:libraryName>
+    <con:libraryName>wss4j-policy-2.0.2.jar</con:libraryName>
+    <con:libraryName>wss4j-ws-security-common-2.0.2.jar</con:libraryName>
+    <con:libraryName>wss4j-ws-security-dom-2.0.2.jar</con:libraryName>
+    <con:libraryName>wss4j-ws-security-policy-stax-2.0.2.jar</con:libraryName>
+    <con:libraryName>wss4j-ws-security-stax-2.0.2.jar</con:libraryName>
+    <con:libraryName>xmlschema-core-2.1.0.jar</con:libraryName>
+    <con:libraryName>xmlsec-2.0.2.jar</con:libraryName>
+    <con:libraryName>cxf-rt-bindings-soap-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-frontend-jaxrs-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-frontend-jaxws-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-frontend-simple-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-rs-extension-providers-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-transports-http-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-transports-http-jetty-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-ws-security-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-wsdl-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-rs-client-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-rs-service-description-3.0.3.jar</con:libraryName>
+    <con:libraryName>javax.ws.rs-api-2.0.1.jar</con:libraryName>
+    <con:libraryName>cxf-core-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-databinding-aegis-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-databinding-jaxb-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-rt-databinding-xmlbeans-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-tools-common-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-tools-validator-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-tools-wsdlto-core-3.0.3.jar</con:libraryName>
+    <con:libraryName>cxf-tools-wsdlto-frontend-jaxws-3.0.3.jar</con:libraryName>
+    <con:libraryName>stax2-api-3.1.4.jar</con:libraryName>
+    <con:libraryName>woodstox-core-asl-4.4.1.jar</con:libraryName>
+    <!-- end of cxf 3.0.3 related updates -->
+
+    <con:libraryName>dom4j-1.6.1.jar</con:libraryName>
+    <con:libraryName>ecj-4.4.jar</con:libraryName>
+    <con:libraryName>ehcache-2.9.0.jar</con:libraryName>
+    <con:libraryName>enttoolkit-7.1.jar</con:libraryName>
+    <con:libraryName>geronimo-j2ee-management_1.1_spec-1.0.1.jar</con:libraryName>
+    <con:libraryName>geronimo-jms_1.1_spec-1.1.1.jar</con:libraryName>
+    <con:libraryName>guava-19.0.jar</con:libraryName>
+    <con:libraryName>hibernate-3.6.3.jar</con:libraryName>
+    <con:libraryName>hibernate-jpa-1.0.0.jar</con:libraryName>
+    <con:libraryName>validation-api-2.0.1.Final.jar</con:libraryName>
+    <con:libraryName>hibernate-validator-6.0.7.Final.jar</con:libraryName>
+    <con:libraryName>imq-4.4.jar</con:libraryName>
+    <con:libraryName>jetty-all-9.4.8-uber.jar</con:libraryName>
+    <con:libraryName>jackson-annotations-2.9.4.jar</con:libraryName>
+    <con:libraryName>jackson-core-2.9.4.jar</con:libraryName>
+    <con:libraryName>jackson-databind-2.9.4.jar</con:libraryName>
+    <con:libraryName>jalopy-1.5.jar</con:libraryName>
+    <con:libraryName>jaxen-core-1.0.jar</con:libraryName>
+    <con:libraryName>jaxen-dom-1.0.jar</con:libraryName>
+    <con:libraryName>jcifs-0.8.3.jar</con:libraryName>
+    <con:libraryName>jdom-1.1.jar</con:libraryName>
+    <con:libraryName>jettison-1.3.jar</con:libraryName>
+    <con:libraryName>jetty-util-9.4.8.jar</con:libraryName>
+    <con:libraryName>jna-4.1.0.jar</con:libraryName>
+    <con:libraryName>jsch-0.1.51.jar</con:libraryName>
+    <con:libraryName>jsr173-1.0.jar</con:libraryName>
+    <con:libraryName>jsr311-api-1.1.1.jar</con:libraryName>
+   <!-- <con:libraryName>junit-4.9.jar</con:libraryName>
+    <con:libraryName>junit-addons-1.4.jar</con:libraryName>-->
+    <con:libraryName>jxta-2.0.jar</con:libraryName>
+    <con:libraryName>kryo-2.20.jar</con:libraryName>
+    <con:libraryName>log4j-1.2.15.jar</con:libraryName>
+    <con:libraryName>minlog-1.2.jar</con:libraryName>
+    <con:libraryName>neethi-2.0.4.jar</con:libraryName>
+    <con:libraryName>ojdbc7.jar</con:libraryName>
+    <con:libraryName>spring-jms-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-test-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>quartz-2.2.1.jar</con:libraryName>
+    <con:libraryName>reflectasm-1.07.jar</con:libraryName>
+    <con:libraryName>saxpath-1.0.jar</con:libraryName>
+    <con:libraryName>javax.servlet-api-3.1.0.jar</con:libraryName>
+    <con:libraryName>slf4j-api-1.6.1.jar</con:libraryName>
+    <con:libraryName>slf4j-log4j12-1.6.1.jar</con:libraryName>
+    <con:libraryName>slf4j-simple-1.6.1.jar</con:libraryName>
+    <con:libraryName>snakeyaml-1.7.jar</con:libraryName>
+    <con:libraryName>spring-aop-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-beans-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-context-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-context-support-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-core-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-expression-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-jdbc-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-orm-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-security-cas-5.0.1.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-security-config-5.0.1.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-security-core-5.0.1.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-security-web-5.0.1.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-tx-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>spring-web-5.0.3.RELEASE.jar</con:libraryName>
+    <con:libraryName>velocity-1.4.jar</con:libraryName>
+    <con:libraryName>velocity-dvsl-1.0.jar</con:libraryName>
+    <con:libraryName>velocity-tools-1.4.jar</con:libraryName>
+    <con:libraryName>velocity-tools-generic-1.4.jar</con:libraryName>
+    <con:libraryName>velocity-tools-view-1.4.jar</con:libraryName>
+    <con:libraryName>voldemort.jar</con:libraryName>
+    <con:libraryName>wsdl4j-1.6.2.jar</con:libraryName>
+    <con:libraryName>wsdl4j-qname-1.6.2.jar</con:libraryName>
+    <con:libraryName>xbean-2.5.jar</con:libraryName>
+    <con:libraryName>xbean-spring-3.6.jar</con:libraryName>
+    <con:libraryName>xstream-1.4.10.jar</con:libraryName>
+    <con:libraryName>axiom-api-1.2.8.jar</con:libraryName>
+    <con:libraryName>axiom-impl-1.2.8.jar</con:libraryName>
+    <con:libraryName>xml-resolver-1.2.jar</con:libraryName>
+    <con:libraryName>objenesis-1.2.jar</con:libraryName>
+    <con:libraryName>drools-compiler-5.5.0.Final.jar</con:libraryName>
+    <con:libraryName>drools-core-5.5.0.Final.jar</con:libraryName>
+	<con:libraryName>drools-decisiontables-5.5.0.Final.jar</con:libraryName>
+	<con:libraryName>drools-templates-5.5.0.Final.jar</con:libraryName>
+	<con:libraryName>drools-jsr94-5.5.0.Final.jar</con:libraryName>
+	<con:libraryName>jsr94-1.1.jar</con:libraryName>
+	<con:libraryName>jxl-1.0.jar</con:libraryName>
+    <con:libraryName>knowledge-api-5.5.0.Final.jar</con:libraryName>
+	<con:libraryName>knowledge-internal-api-5.5.0.Final.jar</con:libraryName>
+   <!-- <con:libraryName>xmlpull-1.1.3.1.jar</con:libraryName>-->
+    <con:libraryName>mvel2-2.1.8.Final.jar</con:libraryName>
+    <con:libraryName>protobuf-java-2.4.1.jar</con:libraryName>
+    <con:libraryName>jgroups-3.3.1.Final.jar</con:libraryName>
+    <con:libraryName>javassist-3.18.1-GA.jar</con:libraryName>
+    <con:libraryName>transactions-3.8.0.jar</con:libraryName>
+    <con:libraryName>transactions-api-3.8.0.jar</con:libraryName>
+    <con:libraryName>transactions-jdbc-3.8.0.jar</con:libraryName>
+    <con:libraryName>transactions-jta-3.8.0.jar</con:libraryName>
+    <con:libraryName>atomikos-util-3.8.0.jar</con:libraryName>
+    <con:libraryName>jta-1.1.jar</con:libraryName>
+    <con:libraryName>kafka-clients-1.0.0.jar</con:libraryName>
+    <con:libraryName>lz4-java-1.4.jar</con:libraryName>
+    <con:libraryName>snappy-java-1.1.4.jar</con:libraryName>
+
+	<!-- Jars required by Activiti workflow engine in em-core-bpm -->
+	<con:libraryName>activiti-bpmn-converter-5.16.jar</con:libraryName>
+	<con:libraryName>activiti-bpmn-model-5.16.jar</con:libraryName>
+	<con:libraryName>activiti-engine-5.16.jar</con:libraryName>
+	<con:libraryName>activiti-image-generator-5.16.jar</con:libraryName>
+	<con:libraryName>activiti-process-validation-5.16.jar</con:libraryName>
+	<con:libraryName>activiti-spring-5.16.jar</con:libraryName>
+
+	<con:libraryName>joda-time-2.1.jar</con:libraryName>
+	<con:libraryName>mybatis-3.2.5.jar</con:libraryName>
+	<con:libraryName>commons-lang3-3.1.jar</con:libraryName>
+	<!-- Jars required by Activiti workflow engine in em-core-bpm -->
+
+	<!-- Adding clover.jar for post deploy test cases and it should not effect the normal build deployment and execution -->
+	<!-- <con:libraryName>clover.jar</con:libraryName>-->
+	<!-- jar files required by common-ts -->
+    <con:libraryName>rxjava-1.1.1.jar</con:libraryName>
+    <con:libraryName>cassandra-driver-core-3.4.0.jar</con:libraryName>
+    <con:libraryName>metrics-core-3.2.2.jar</con:libraryName>
+    <con:libraryName>curator-client-2.9.1.jar</con:libraryName>
+    <con:libraryName>curator-framework-2.9.1.jar</con:libraryName>
+    <con:libraryName>curator-recipes-2.9.1.jar</con:libraryName>
+    <con:libraryName>zookeeper-3.4.11.jar</con:libraryName>
+	</con:libraries>
+ 
+  <con:type>24x7</con:type>
+  <con:includedPropertySets>
+    <con:propertySetName>System</con:propertySetName>
+    <con:propertySetName>a2f</con:propertySetName>
+    <con:propertySetName>SummaryHandlerClient</con:propertySetName>
+  </con:includedPropertySets>
+  <con:properties>
+   
+  	<con:property>
+      <con:dataTypeName>String</con:dataTypeName>
+      <con:defaultValue>
+        <con:value>classpath:com/emeter/hydrofw/application/Application24x7.xml</con:value>
+      </con:defaultValue>
+      <con:description>Code configuration. Developer use only.</con:description>
+      <con:introducedInVersion>8.6</con:introducedInVersion>
+      <con:visibility>D</con:visibility>
+      <con:name>springBeansXml.application</con:name>
+     <con:propertyGroupName>SpringBeansXml</con:propertyGroupName>
+    </con:property>
+    
+  </con:properties>
+  
+</con:Application>
